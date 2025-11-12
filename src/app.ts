@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { pool } from "./config/db";
+import authRoutes from "./routes/authRoutes";
 
 const app = express();
 app.use(cors());
@@ -15,5 +16,7 @@ app.get("/health", async (_req, res) => {
     res.status(500).json({ status: "실패", db: "연결 실패" });
   }
 });
+
+app.use("/users", authRoutes);
 
 export default app;
