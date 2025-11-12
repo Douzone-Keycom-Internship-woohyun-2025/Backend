@@ -31,6 +31,8 @@ export const logout = async (req: AuthRequest, res: Response) => {
     return res.json({ message: "로그아웃 완료" });
   } catch (err) {
     console.error("로그아웃 에러:", err);
-    return res.json({ message: "로그아웃 완료" });
+    return res
+      .status(500)
+      .json({ message: "로그아웃 처리 중 오류가 발생했습니다." });
   }
 };

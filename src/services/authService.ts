@@ -53,23 +53,18 @@ export const AuthService = {
     return { user: safeUser, token };
   },
 
-  async logout(token: string) {
+  async logout(token: string): Promise<void> {
     let expSec: number | null = null;
-
     try {
       const decoded = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload;
       expSec = typeof decoded.exp === "number" ? decoded.exp : null;
     } catch (err) {
-      return { message: "로그아웃 완료" };
+      return;
     }
-
-    if (!expSec || expSec <= 0) {
-      return { message: "로그아웃 완료" };
+    if (!expSec || expSec * 1000 <= Date.now()) {
+      return;
     }
-
     const expiresAt = new Date(expSec * 1000);
     await JwtBlacklistRepository.add(token, expiresAt);
-
-    return { message: "로그아웃 완료" };
   },
 };
