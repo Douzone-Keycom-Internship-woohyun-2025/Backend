@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { AuthRequest } from "../types/request";
+import { AuthRequest } from "../types/auth";
 import { PresetService } from "../services/presetService";
 import { NotFoundError } from "../errors/notFoundError";
 
