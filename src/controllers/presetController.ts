@@ -10,12 +10,12 @@ function parseId(raw: string): number | null {
 
 export const createPreset = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.userId;
-    if (!userId) {
+    const email = req.user?.email;
+    if (!email) {
       return res.status(401).json({ status: "fail", message: "인증 필요" });
     }
 
-    const row = await PresetService.create(userId, req.body);
+    const row = await PresetService.create(email, req.body);
 
     return res.status(201).json({
       status: "success",
@@ -32,19 +32,14 @@ export const createPreset = async (req: AuthRequest, res: Response) => {
     });
   } catch (e: unknown) {
     console.error("프리셋 생성 에러:", e);
-    if (e instanceof Error) {
-      return res
-        .status(500)
-        .json({ status: "error", message: e.message || "서버 오류" });
-    }
     return res.status(500).json({ status: "error", message: "서버 오류" });
   }
 };
 
 export const listPresets = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.userId;
-    if (!userId) {
+    const email = req.user?.email;
+    if (!email) {
       return res.status(401).json({ status: "fail", message: "인증 필요" });
     }
 
@@ -57,7 +52,7 @@ export const listPresets = async (req: AuthRequest, res: Response) => {
         ? Math.min(Math.floor(rawLimit), 100)
         : 10;
 
-    const { rows, total } = await PresetService.list(userId, skip, limit);
+    const { rows, total } = await PresetService.list(email, skip, limit);
     const page = Math.floor(skip / Math.max(1, limit)) + 1;
     const totalPages = Math.max(1, Math.ceil(total / Math.max(1, limit)));
 
@@ -81,19 +76,14 @@ export const listPresets = async (req: AuthRequest, res: Response) => {
     });
   } catch (e: unknown) {
     console.error("프리셋 목록 조회 에러:", e);
-    if (e instanceof Error) {
-      return res
-        .status(500)
-        .json({ status: "error", message: e.message || "서버 오류" });
-    }
     return res.status(500).json({ status: "error", message: "서버 오류" });
   }
 };
 
 export const getPreset = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.userId;
-    if (!userId) {
+    const email = req.user?.email;
+    if (!email) {
       return res.status(401).json({ status: "fail", message: "인증 필요" });
     }
 
@@ -102,7 +92,7 @@ export const getPreset = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ status: "fail", message: "잘못된 ID" });
     }
 
-    const r = await PresetService.get(userId, presetId);
+    const r = await PresetService.get(email, presetId);
 
     return res.json({
       status: "success",
@@ -117,14 +107,8 @@ export const getPreset = async (req: AuthRequest, res: Response) => {
       },
     });
   } catch (e: unknown) {
-    console.error("프리셋 조회 에러:", e);
     if (e instanceof NotFoundError) {
       return res.status(404).json({ status: "fail", message: e.message });
-    }
-    if (e instanceof Error) {
-      return res
-        .status(500)
-        .json({ status: "error", message: e.message || "서버 오류" });
     }
     return res.status(500).json({ status: "error", message: "서버 오류" });
   }
@@ -132,8 +116,8 @@ export const getPreset = async (req: AuthRequest, res: Response) => {
 
 export const updatePreset = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.userId;
-    if (!userId) {
+    const email = req.user?.email;
+    if (!email) {
       return res.status(401).json({ status: "fail", message: "인증 필요" });
     }
 
@@ -142,17 +126,11 @@ export const updatePreset = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ status: "fail", message: "잘못된 ID" });
     }
 
-    await PresetService.update(userId, presetId, req.body);
+    await PresetService.update(email, presetId, req.body);
     return res.json({ status: "success", message: "프리셋이 수정되었습니다." });
   } catch (e: unknown) {
-    console.error("프리셋 수정 에러:", e);
     if (e instanceof NotFoundError) {
       return res.status(404).json({ status: "fail", message: e.message });
-    }
-    if (e instanceof Error) {
-      return res
-        .status(500)
-        .json({ status: "error", message: e.message || "서버 오류" });
     }
     return res.status(500).json({ status: "error", message: "서버 오류" });
   }
@@ -160,8 +138,8 @@ export const updatePreset = async (req: AuthRequest, res: Response) => {
 
 export const deletePreset = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.userId;
-    if (!userId) {
+    const email = req.user?.email;
+    if (!email) {
       return res.status(401).json({ status: "fail", message: "인증 필요" });
     }
 
@@ -170,18 +148,12 @@ export const deletePreset = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ status: "fail", message: "잘못된 ID" });
     }
 
-    await PresetService.remove(userId, presetId);
+    await PresetService.remove(email, presetId);
 
     return res.status(204).end();
   } catch (e: unknown) {
-    console.error("프리셋 삭제 에러:", e);
     if (e instanceof NotFoundError) {
       return res.status(404).json({ status: "fail", message: e.message });
-    }
-    if (e instanceof Error) {
-      return res
-        .status(500)
-        .json({ status: "error", message: e.message || "서버 오류" });
     }
     return res.status(500).json({ status: "error", message: "서버 오류" });
   }
