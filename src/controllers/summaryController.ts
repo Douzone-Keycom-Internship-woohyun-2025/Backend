@@ -2,6 +2,7 @@ import { Response } from "express";
 import { AuthRequest } from "../types/auth";
 import { PresetService } from "../services/presetService";
 import { SummaryService } from "../services/summaryService";
+import { NotFoundError } from "../errors/notFoundError";
 
 export const getSummary = async (req: AuthRequest, res: Response) => {
   try {
@@ -50,7 +51,10 @@ export const getSummary = async (req: AuthRequest, res: Response) => {
         ...summary,
       },
     });
-  } catch (e) {
+  } catch (e: unknown) {
+    if (e instanceof Error && e.constructor.name === "NotFoundError") {
+      return res.status(404).json({ status: "fail", message: e.message });
+    }
     console.error("요약 분석 에러:", e);
     return res
       .status(500)

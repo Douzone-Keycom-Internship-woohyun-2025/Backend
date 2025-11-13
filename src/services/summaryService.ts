@@ -140,7 +140,8 @@ export const SummaryService = {
 
     const statusPercent: Record<string, number> = {};
     for (const k in statusCount) {
-      statusPercent[k] = Number(((statusCount[k] / total) * 100).toFixed(2));
+      statusPercent[k] =
+        total > 0 ? Number(((statusCount[k] / total) * 100).toFixed(2)) : 0;
     }
 
     const monthlyMap: Record<string, number> = {};
