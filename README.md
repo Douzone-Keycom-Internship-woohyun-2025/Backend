@@ -50,7 +50,7 @@ TechLens 프로젝트
 | 런타임 | Node.js 20+ |
 | 웹 프레임워크 | Express |
 | DB | PostgreSQL 14+ |
-| 인증 | JWT (Bearer), Blacklist(로그아웃) |
+| 인증 | JWT (Bearer), RefreshToken |
 | 검증 | Zod |
 | 배포 | Render |
 | 로깅 | console (필요 시 winston 확장) |
@@ -72,7 +72,6 @@ src/
 │   ├── requireAuth.ts          # JWT 인증 미들웨어
 │   └── validate.ts             # Zod 기반 요청 바디 검증
 ├── repositories/
-│   ├── jwtBlacklistRepository.ts
 │   └── presetRepository.ts     # DB 접근 (쿼리)
 ├── routes/
 │   ├── authRoutes.ts           # /users (signup/login/logout)
@@ -89,13 +88,32 @@ src/
 
 ## 🔐 인증
 
-- **방식**: JWT Bearer Token
-- **발급**: `POST /users/login` 성공 시 `token` 발급
-- **제거(로그아웃)**: 블랙리스트 테이블에 token 등록 → `requireAuth`에서 차단
-- **헤더 예시**
-  ```
-  Authorization: Bearer <JWT_TOKEN>
-  ```
+- **방식**: AccessToken + RefreshToken 기반 JWT 인증
+- **발급**
+  - `POST /users/signup` 성공 시: `accessToken`, `refreshToken` 동시 발급
+  - `POST /users/login` 성공 시: `accessToken`, `refreshToken` 동시 발급
+- **사용 (인증이 필요한 모든 API)**
+  - 요청 헤더에 **AccessToken**을 Bearer 방식으로 포함
+  - 예시:
+    ```http
+    Authorization: Bearer <ACCESS_TOKEN>
+    ```
+- **토큰 재발급**
+  - `POST /users/refresh`
+  - 요청 바디에 **RefreshToken** 전달  
+    ```json
+    { "refreshToken": "<REFRESH_TOKEN>" }
+    ```
+  - 응답으로 **새로운 AccessToken** 발급
+
+- **로그아웃**
+  - `POST /users/logout`
+  - 요청 바디에 **RefreshToken** 전달  
+    ```json
+    { "refreshToken": "<REFRESH_TOKEN>" }
+    ```
+  - 서버 DB에서 해당 RefreshToken을 삭제  
+  - 이후에는 **AccessToken 재발급 불가능**, 기존 AccessToken은 만료 시점까지만 유효
 
 ---
 
@@ -106,7 +124,7 @@ src/
 ### Users (인증)
 - `POST /users/signup` – 회원가입
 - `POST /users/login` – 로그인(JWT 발급)
-- `POST /users/logout` – 로그아웃(JWT 블랙리스트)
+- `POST /users/logout` – 로그아웃
 
 ### Presets (프리셋)
 - `POST /presets` – 프리셋 생성 (JWT 필요)
