@@ -60,28 +60,43 @@ TechLens 프로젝트
 ## 📁 프로젝트 구조
 
 ```
-src/
-├── app.ts                      # Express 앱 설정 (CORS/JSON/헬스체크)
-├── config/
-│   └── db.ts                   # PostgreSQL pool 설정
-├── controllers/
-│   └── presetController.ts     # 프리셋 CRUD 컨트롤러
-├── errors/
-│   └── NotFoundError.ts        # 커스텀 404 에러
-├── middlewares/
-│   ├── requireAuth.ts          # JWT 인증 미들웨어
-│   └── validate.ts             # Zod 기반 요청 바디 검증
-├── repositories/
-│   └── presetRepository.ts     # DB 접근 (쿼리)
-├── routes/
-│   ├── authRoutes.ts           # /users (signup/login/logout)
-│   └── presetRoutes.ts         # /presets
-├── services/
-│   └── presetService.ts        # 비즈니스 로직
-├── types/
-│   └── request.ts              # AuthRequest 등 타입
-└── validators/
-    └── presetSchemas.ts        # Zod 스키마 (create/update)
+. (Project Root)
+├── src/
+│   ├── app.ts                 # Express 앱 설정 (CORS/JSON/헬스체크)
+│   ├── server.ts              # 서버 실행 (포트 바인딩)
+│   ├── config/
+│   │   ├── db.ts              # PostgreSQL pool 설정
+│   │   └── env.ts             # 환경 변수 (Zod)
+│   ├── controllers/
+│   │   ├── authController.ts
+│   │   ├── presetController.ts
+│   │   └── summaryController.ts
+│   ├── errors/
+│   │   └── notFoundError.ts   # 커스텀 404 에러
+│   ├── middlewares/
+│   │   ├── requireAuth.ts     # JWT 인증 미들웨어
+│   │   └── validate.ts        # Zod 기반 요청 바디 검증
+│   ├── models/
+│   │   └── .gitkeep
+│   ├── repositories/
+│   │   ├── authRepository.ts
+│   │   ├── presetRepository.ts
+│   │   └── refreshTokenRepository.ts
+│   ├── routes/
+│   │   ├── authRoutes.ts
+│   │   ├── presetRoutes.ts
+│   │   └── summaryRoutes.ts
+│   ├── services/
+│   │   ├── authService.ts
+│   │   ├── presetService.ts
+│   │   └── summaryService.ts
+│   ├── types/
+│   │   ├── auth.ts
+│   │   └── preset.ts
+│   └── validators/
+│       └── presetSchemas.ts   # Zod 스키마 (create/update)
+└── tests/
+    └── .gitkeep
 ```
 
 ---
@@ -152,7 +167,6 @@ src/
 PORT=4000
 DATABASE_URL=postgresql://<user>:<pass>@<host>:<port>/<db>
 JWT_SECRET=<랜덤-32바이트-이상>
-CORS_ORIGIN=*
 ```
 
 ### 2) 설치 & 실행
