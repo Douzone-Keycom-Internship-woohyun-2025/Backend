@@ -130,7 +130,7 @@ src/
 - `POST /presets` – 프리셋 생성 (JWT 필요)
 - `GET /presets` – 프리셋 목록 (skip/limit, 요약 응답. description 제외)
 - `GET /presets/:presetId` – 프리셋 단건 조회 (상세, description 포함)
-- `PUT /presets/:presetId` – 프리셋 수정 (부분 업데이트)
+- `PATCH /presets/:presetId` – 프리셋 수정 (부분 업데이트)
 - `DELETE /presets/:presetId` – 프리셋 삭제 (204 No Content)
 
 ### Patents / Analysis / Favorites
