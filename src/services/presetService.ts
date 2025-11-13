@@ -1,3 +1,4 @@
+import { NotFoundError } from "../errors/notFoundError";
 import { PresetRepository } from "../repositories/presetRepository";
 
 export const PresetService = {
@@ -20,7 +21,7 @@ export const PresetService = {
 
   async get(userId: number, presetId: number) {
     const row = await PresetRepository.findById(userId, presetId);
-    if (!row) throw new Error("NOT_FOUND");
+    if (!row) throw new NotFoundError();
     return row;
   },
 
@@ -36,11 +37,11 @@ export const PresetService = {
     }>
   ) {
     const ok = await PresetRepository.update(userId, presetId, patch);
-    if (!ok) throw new Error("NOT_FOUND");
+    if (!ok) throw new NotFoundError();
   },
 
   async remove(userId: number, presetId: number) {
     const ok = await PresetRepository.remove(userId, presetId);
-    if (!ok) throw new Error("NOT_FOUND");
+    if (!ok) throw new NotFoundError();
   },
 };

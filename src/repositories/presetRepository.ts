@@ -44,10 +44,11 @@ export const PresetRepository = {
     limit = 10
   ): Promise<{ rows: PresetRow[]; total: number }> {
     const data = await pool.query(
-      `SELECT * FROM presets
-       WHERE user_tblkey=$1
-       ORDER BY preset_tblkey DESC
-       LIMIT $2 OFFSET $3`,
+      `SELECT *, COUNT(*) OVER()::int AS total_count
+      FROM presets
+      WHERE user_tblkey=$1
+      ORDER BY preset_tblkey DESC
+      LIMIT $2 OFFSET $3`,
       [userId, limit, skip]
     );
     const cnt = await pool.query(
