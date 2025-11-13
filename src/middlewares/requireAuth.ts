@@ -5,6 +5,7 @@ import { Request, Response, NextFunction } from "express";
 const JWT_SECRET = process.env.JWT_SECRET!;
 
 export interface AuthPayload {
+  userId: number;
   email: string;
 }
 
@@ -28,9 +29,18 @@ export async function requireAuth(
 
     const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload;
 
-    req.user = { email: decoded.email };
+    req.user = {
+      userId: decoded.userId,
+      email: decoded.email,
+    };
     next();
-  } catch (e) {
+  } catch (e: any) {
+    if (e.name === "TokenExpiredError") {
+      return res.status(401).json({
+        status: "fail",
+        message: "토큰 만료됨",
+      });
+    }
     return res.status(401).json({
       status: "fail",
       message: "유효하지 않은 토큰",
