@@ -94,7 +94,7 @@ async function fetchAll(
   let items: PatentItem[] = [...first.items];
 
   const concurrency = 5;
-  let batch: Promise<any>[] = [];
+  let batch: ReturnType<typeof fetchPage>[] = [];
 
   for (let page = 2; page <= totalPages; page++) {
     batch.push(fetchPage(applicant, start, end, page, 100));
