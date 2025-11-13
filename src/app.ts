@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { pool } from "./config/db";
 import authRoutes from "./routes/authRoutes";
+import presetRoutes from "./routes/presetRoutes";
 
 const app = express();
 app.use(cors());
@@ -18,5 +19,6 @@ app.get("/health", async (_req, res) => {
 });
 
 app.use("/users", authRoutes);
+app.use("/presets", presetRoutes);
 
 export default app;
