@@ -1,7 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../types/auth";
 import { PresetService } from "../services/presetService";
-import { PatentStatService } from "../services/summaryService";
+import { SummaryService } from "../services/summaryService";
 
 export const getSummary = async (req: AuthRequest, res: Response) => {
   try {
@@ -35,7 +35,7 @@ export const getSummary = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    const summary = await PatentStatService.analyze({
+    const summary = await SummaryService.analyze({
       applicant,
       startDate,
       endDate,
