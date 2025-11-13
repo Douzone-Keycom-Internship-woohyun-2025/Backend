@@ -248,7 +248,7 @@ main            → 프로덕션
 미구현: 7개
 
 완성도: 58.8%
-
+```
 | 엔드포인트 | 상태 || 엔드포인트 | 상태 |
 |---|---|
 | Users: POST /users/signup | ✅ 완료 |
@@ -268,7 +268,7 @@ main            → 프로덕션
 | Favorites: POST /favorites | ⏳ 미구현 |
 | Favorites: GET /favorites/:applicationNumber | ⏳ 미구현 |
 | Favorites: DELETE /favorites/:applicationNumber | ⏳ 미구현 |
-
+```
 ---
 
 ## 📌 비고
