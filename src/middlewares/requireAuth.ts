@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { JwtBlacklistRepository } from "../repositories/jwtBlacklistRepository";
-import { AuthRequest } from "../types/request";
+import { AuthRequest } from "../types/auth";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 if (!JWT_SECRET) throw new Error("JWT_SECRET 누락");
