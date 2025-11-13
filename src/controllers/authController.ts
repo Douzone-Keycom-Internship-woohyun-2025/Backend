@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { AuthService } from "../services/authService";
-import { AuthRequest } from "../types/request";
+import { AuthRequest } from "../types/auth";
 
 export const signup = async (req: Request, res: Response) => {
   try {
