@@ -1,22 +1,28 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { UserRepository } from "../repositories/userRepository";
-import { JwtBlacklistRepository } from "../repositories/jwtBlacklistRepository";
+import { RefreshTokenRepository } from "../repositories/refreshTokenRepositort";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  throw new Error("환경변수 JWT_SECRET이 설정되어야 합니다.");
+const JWT_SECRET = process.env.JWT_SECRET!;
+const SALT_ROUNDS = 12;
+
+function normalizeEmail(e: string) {
+  return e.trim().toLowerCase();
 }
 
-const SALT_ROUNDS = 12;
-const normEmail = (e: string) => e.trim().toLowerCase();
+function generateAccessToken(payload: any) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
+}
+
+function generateRefreshToken() {
+  return jwt.sign({}, JWT_SECRET, { expiresIn: "7d" });
+}
 
 export const AuthService = {
   async signup(email: string, password: string) {
-    email = normEmail(email);
-    if (!password || password.length < 8) {
-      throw new Error("비밀번호는 최소 8자 이상이어야 합니다.");
-    }
+    email = normalizeEmail(email);
+
+    if (password.length < 8) throw new Error("비밀번호는 최소 8자 이상");
 
     const exists = await UserRepository.findByEmail(email);
     if (exists) throw new Error("이미 가입된 이메일입니다.");
@@ -24,47 +30,54 @@ export const AuthService = {
     const hashed = await bcrypt.hash(password, SALT_ROUNDS);
     const user = await UserRepository.create(email, hashed);
 
-    const token = jwt.sign(
-      { userId: user.user_tblkey, email: user.email },
-      JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    const accessToken = generateAccessToken({ email });
 
-    const { password_hash: _pw, ...safeUser } = user;
-    return { user: safeUser, token };
+    const refreshToken = generateRefreshToken();
+    const decoded: any = jwt.verify(refreshToken, JWT_SECRET);
+    const expiresAt = new Date(decoded.exp * 1000);
+
+    await RefreshTokenRepository.save(refreshToken, email, expiresAt);
+
+    const { password_hash: _, ...safeUser } = user;
+
+    return { user: safeUser, accessToken, refreshToken };
   },
 
   async login(email: string, password: string) {
-    email = normEmail(email);
+    email = normalizeEmail(email);
 
     const user = await UserRepository.findByEmail(email);
-    if (!user) throw new Error("이메일 또는 비밀번호를 확인해주세요.");
+    if (!user) throw new Error("이메일 또는 비밀번호 오류");
 
     const match = await bcrypt.compare(password, user.password_hash);
-    if (!match) throw new Error("이메일 또는 비밀번호를 확인해주세요.");
+    if (!match) throw new Error("이메일 또는 비밀번호 오류");
 
-    const token = jwt.sign(
-      { userId: user.user_tblkey, email: user.email },
-      JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    const accessToken = generateAccessToken({ email });
 
-    const { password_hash: _pw, ...safeUser } = user;
-    return { user: safeUser, token };
+    const refreshToken = generateRefreshToken();
+    const decoded: any = jwt.verify(refreshToken, JWT_SECRET);
+    const expiresAt = new Date(decoded.exp * 1000);
+
+    await RefreshTokenRepository.save(refreshToken, email, expiresAt);
+
+    const { password_hash: _, ...safeUser } = user;
+    return { user: safeUser, accessToken, refreshToken };
   },
 
-  async logout(token: string): Promise<void> {
-    let expSec: number | null = null;
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload;
-      expSec = typeof decoded.exp === "number" ? decoded.exp : null;
-    } catch (err) {
-      return;
-    }
-    if (!expSec || expSec * 1000 <= Date.now()) {
-      return;
-    }
-    const expiresAt = new Date(expSec * 1000);
-    await JwtBlacklistRepository.add(token, expiresAt);
+  async refresh(refreshToken: string) {
+    const stored = await RefreshTokenRepository.find(refreshToken);
+    if (!stored) throw new Error("refresh token invalid");
+
+    jwt.verify(refreshToken, JWT_SECRET);
+
+    const email = stored.email;
+
+    const accessToken = generateAccessToken({ email });
+
+    return { accessToken };
+  },
+
+  async logout(refreshToken: string) {
+    await RefreshTokenRepository.delete(refreshToken);
   },
 };
