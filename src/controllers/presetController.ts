@@ -123,9 +123,7 @@ export const updatePreset = async (req: AuthRequest, res: Response) => {
       return res.status(401).json({ status: "fail", message: "인증 필요" });
 
     const presetId = Number(req.params.presetId);
-    const patch = updatePresetSchema.parse(req.body);
-
-    await PresetService.update(userId, presetId, patch);
+    await PresetService.update(userId, presetId, req.body);
     return res.json({ status: "success", message: "프리셋이 수정되었습니다." });
   } catch (e: unknown) {
     console.error("프리셋 수정 에러:", e);
