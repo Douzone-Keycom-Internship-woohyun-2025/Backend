@@ -94,10 +94,10 @@ async function fetchAll(
   let items: PatentItem[] = [...first.items];
 
   const concurrency = 5;
-  let batch: Array<ReturnType<typeof fetchPage>> = [];
+  let batch: ReturnType<typeof fetchPage>[] = [];
 
   const processBatch = async (
-    batchToProcess: Array<ReturnType<typeof fetchPage>>
+    batchToProcess: ReturnType<typeof fetchPage>[]
   ) => {
     if (batchToProcess.length === 0) return;
     const results = await Promise.all(batchToProcess);
