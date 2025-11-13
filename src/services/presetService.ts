@@ -1,40 +1,34 @@
+// src/services/presetService.ts
 import { NotFoundError } from "../errors/notFoundError";
 import { PresetRepository } from "../repositories/presetRepository";
-import { UserRepository } from "../repositories/userRepository";
+import { PresetPayload } from "../types/preset";
 
 export const PresetService = {
-  async getUserKey(email: string) {
-    const user = await UserRepository.findByEmail(email);
-    if (!user) throw new Error("유저를 찾을 수 없습니다.");
-    return user.user_tblkey;
-  },
-
-  async create(email: string, body: any) {
-    const userId = await this.getUserKey(email);
+  async create(userId: number, body: PresetPayload) {
     return PresetRepository.create(userId, body);
   },
 
-  async list(email: string, skip = 0, limit = 10) {
-    const userId = await this.getUserKey(email);
+  async list(userId: number, skip = 0, limit = 10) {
     return PresetRepository.list(userId, skip, limit);
   },
 
-  async get(email: string, presetId: number) {
-    const userId = await this.getUserKey(email);
+  async get(userId: number, presetId: number) {
     const row = await PresetRepository.findById(userId, presetId);
-    if (!row) throw new NotFoundError();
+    if (!row) throw new NotFoundError("프리셋을 찾을 수 없습니다.");
     return row;
   },
 
-  async update(email: string, presetId: number, patch: any) {
-    const userId = await this.getUserKey(email);
+  async update(
+    userId: number,
+    presetId: number,
+    patch: Partial<PresetPayload>
+  ) {
     const ok = await PresetRepository.update(userId, presetId, patch);
-    if (!ok) throw new NotFoundError();
+    if (!ok) throw new NotFoundError("프리셋을 찾을 수 없습니다.");
   },
 
-  async remove(email: string, presetId: number) {
-    const userId = await this.getUserKey(email);
+  async remove(userId: number, presetId: number) {
     const ok = await PresetRepository.remove(userId, presetId);
-    if (!ok) throw new NotFoundError();
+    if (!ok) throw new NotFoundError("프리셋을 찾을 수 없습니다.");
   },
 };

@@ -19,7 +19,7 @@ export const PresetRepository = {
       applicant: string;
       startDate: string;
       endDate: string;
-      description?: string;
+      description?: string | null;
     }
   ): Promise<PresetRow> {
     const r = await pool.query(
@@ -44,18 +44,18 @@ export const PresetRepository = {
     limit = 10
   ): Promise<{ rows: PresetRow[]; total: number }> {
     const data = await pool.query(
-      `SELECT *, COUNT(*) OVER()::int AS total_count
-      FROM presets
-      WHERE user_tblkey=$1
-      ORDER BY preset_tblkey DESC
-      LIMIT $2 OFFSET $3`,
+      `SELECT p.*, COUNT(*) OVER()::int AS total_count
+       FROM presets p
+       WHERE p.user_tblkey = $1
+       ORDER BY p.preset_tblkey DESC
+       LIMIT $2 OFFSET $3`,
       [userId, limit, skip]
     );
-    const cnt = await pool.query(
-      `SELECT COUNT(*) FROM presets WHERE user_tblkey=$1`,
-      [userId]
-    );
-    return { rows: data.rows, total: Number(cnt.rows[0].count) };
+
+    const rows = data.rows as (PresetRow & { total_count: number })[];
+    const total = rows.length ? rows[0].total_count : 0;
+
+    return { rows, total };
   },
 
   async findById(userId: number, id: number): Promise<PresetRow | null> {
@@ -80,6 +80,7 @@ export const PresetRepository = {
     const sets: string[] = [];
     const vals: any[] = [];
     let i = 1;
+
     if (patch.presetName !== undefined) {
       sets.push(`preset_name=$${i++}`);
       vals.push(patch.presetName);
@@ -100,17 +101,19 @@ export const PresetRepository = {
       sets.push(`description=$${i++}`);
       vals.push(patch.description);
     }
+
     if (!sets.length) return false;
 
     vals.push(id, userId);
+
     const r = await pool.query(
-      `UPDATE presets SET ${sets.join(
-        ", "
-      )} WHERE preset_tblkey=$${i++} AND user_tblkey=$${i++}`,
+      `UPDATE presets
+       SET ${sets.join(", ")}
+       WHERE preset_tblkey=$${i++} AND user_tblkey=$${i++}`,
       vals
     );
-    const ok = (r.rowCount ?? 0) > 0;
-    return ok;
+
+    return (r.rowCount ?? 0) > 0;
   },
 
   async remove(userId: number, id: number): Promise<boolean> {
@@ -118,7 +121,6 @@ export const PresetRepository = {
       `DELETE FROM presets WHERE preset_tblkey=$1 AND user_tblkey=$2`,
       [id, userId]
     );
-    const ok = (r.rowCount ?? 0) > 0;
-    return ok;
+    return (r.rowCount ?? 0) > 0;
   },
 };

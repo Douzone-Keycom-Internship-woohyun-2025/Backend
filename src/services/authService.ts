@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { UserRepository } from "../repositories/userRepository";
-import { RefreshTokenRepository } from "../repositories/refreshTokenRepositort";
+import { RefreshTokenRepository } from "../repositories/refreshTokenRepository";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 const SALT_ROUNDS = 12;
@@ -30,11 +30,13 @@ export const AuthService = {
     const hashed = await bcrypt.hash(password, SALT_ROUNDS);
     const user = await UserRepository.create(email, hashed);
 
-    const accessToken = generateAccessToken({ email });
+    const accessToken = generateAccessToken({
+      email,
+      userId: user.user_tblkey,
+    });
 
     const refreshToken = generateRefreshToken();
-    const decoded: any = jwt.verify(refreshToken, JWT_SECRET);
-    const expiresAt = new Date(decoded.exp * 1000);
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
     await RefreshTokenRepository.save(refreshToken, email, expiresAt);
 
@@ -52,11 +54,13 @@ export const AuthService = {
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) throw new Error("이메일 또는 비밀번호 오류");
 
-    const accessToken = generateAccessToken({ email });
+    const accessToken = generateAccessToken({
+      email,
+      userId: user.user_tblkey,
+    });
 
     const refreshToken = generateRefreshToken();
-    const decoded: any = jwt.verify(refreshToken, JWT_SECRET);
-    const expiresAt = new Date(decoded.exp * 1000);
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
     await RefreshTokenRepository.save(refreshToken, email, expiresAt);
 
