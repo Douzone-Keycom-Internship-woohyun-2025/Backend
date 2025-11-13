@@ -241,15 +241,34 @@ main            → 프로덕션
 
 ## ✅ 구현 현황
 
-| 영역 | 상태 |
-|---|---|
-| 인증 (signup/login/logout) | ✅ |
-| 프리셋 CRUD | ✅ |
-| 분석 요약(KIPRIS 연동) | ✅ |
-| 배포 자동화 | ✅ |
-| 관심특허 CRUD | 🔄 |
-| 특허 검색(KIPRIS 연동) | 🔄 |
+구현 현황 체크리스트
+전체 엔드포인트: 17개
 
+구현 완료: 10개
+미구현: 7개
+
+완성도: 58.8%
+```
+| 엔드포인트 | 상태 || 엔드포인트 | 상태 |
+|---|---|
+| Users: POST /users/signup | ✅ 완료 |
+| Users: POST /users/login | ✅ 완료 |
+| Users: POST /users/logout | ✅ 완료 |
+| Users: POST /users/refresh | ✅ 완료 |
+| Presets: POST /presets | ✅ 완료 |
+| Presets: GET /presets | ✅ 완료 |
+| Presets: GET /presets/:presetId | ✅ 완료 |
+| Presets: PATCH /presets/:presetId | ✅ 완료 |
+| Presets: DELETE /presets/:presetId | ✅ 완료 |
+| Summary: GET /summary | ✅ 완료 |
+| Patents: POST /patents/search/basic | ⏳ 미구현 |
+| Patents: POST /patents/search/advanced | ⏳ 미구현 |
+| Patents: GET /patents/:applicationNumber | ⏳ 미구현 |
+| Favorites: GET /favorites/list | ⏳ 미구현 |
+| Favorites: POST /favorites | ⏳ 미구현 |
+| Favorites: GET /favorites/:applicationNumber | ⏳ 미구현 |
+| Favorites: DELETE /favorites/:applicationNumber | ⏳ 미구현 |
+```
 ---
 
 ## 📌 비고
