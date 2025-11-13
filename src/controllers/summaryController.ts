@@ -52,7 +52,7 @@ export const getSummary = async (req: AuthRequest, res: Response) => {
       },
     });
   } catch (e: unknown) {
-    if (e instanceof Error && e.constructor.name === "NotFoundError") {
+    if (e instanceof NotFoundError) {
       return res.status(404).json({ status: "fail", message: e.message });
     }
     console.error("요약 분석 에러:", e);
