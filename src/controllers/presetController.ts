@@ -1,7 +1,6 @@
 import { Response } from "express";
 import { AuthRequest } from "../types/request";
 import { PresetService } from "../services/presetService";
-import { updatePresetSchema } from "../validators/presetSchemas";
 import { NotFoundError } from "../errors/notFoundError";
 
 function parseId(raw: string): number | null {
@@ -143,9 +142,7 @@ export const updatePreset = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ status: "fail", message: "잘못된 ID" });
     }
 
-    const patch = updatePresetSchema.parse(req.body);
-    await PresetService.update(userId, presetId, patch);
-
+    await PresetService.update(userId, presetId, req.body);
     return res.json({ status: "success", message: "프리셋이 수정되었습니다." });
   } catch (e: unknown) {
     console.error("프리셋 수정 에러:", e);
