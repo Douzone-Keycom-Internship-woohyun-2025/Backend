@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { AuthService } from "../services/authService";
-import { AuthRequest } from "../types/auth";
 
 export const signup = async (req: Request, res: Response) => {
   try {
@@ -12,16 +11,9 @@ export const signup = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (e: unknown) {
-    console.error("회원가입 에러:", e);
-    if (e instanceof Error) {
-      return res.status(400).json({
-        status: "fail",
-        message: e.message || "등록 실패",
-      });
-    }
     return res.status(400).json({
       status: "fail",
-      message: "등록 실패",
+      message: e instanceof Error ? e.message : "등록 실패",
     });
   }
 };
@@ -36,41 +28,60 @@ export const login = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (e: unknown) {
-    console.error("로그인 에러:", e);
-    if (e instanceof Error) {
-      return res.status(401).json({
-        status: "fail",
-        message: e.message || "로그인 실패",
-      });
-    }
     return res.status(401).json({
       status: "fail",
-      message: "로그인 실패",
+      message: e instanceof Error ? e.message : "로그인 실패",
     });
   }
 };
 
-export const logout = async (req: AuthRequest, res: Response) => {
+export const refresh = async (req: Request, res: Response) => {
   try {
-    const token = req.token;
-    if (token) {
-      await AuthService.logout(token);
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({
+        status: "fail",
+        message: "refreshToken 필요",
+      });
     }
+
+    const result = await AuthService.refresh(refreshToken);
+
+    return res.json({
+      status: "success",
+      message: "토큰 재발급 성공",
+      data: result,
+    });
+  } catch (e: unknown) {
+    return res.status(401).json({
+      status: "fail",
+      message: "refresh token invalid",
+    });
+  }
+};
+
+export const logout = async (req: Request, res: Response) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({
+        status: "fail",
+        message: "refreshToken 필요",
+      });
+    }
+
+    await AuthService.logout(refreshToken);
+
     return res.json({
       status: "success",
       message: "로그아웃 완료",
     });
   } catch (e: unknown) {
-    console.error("로그아웃 에러:", e);
-    if (e instanceof Error) {
-      return res.status(500).json({
-        status: "error",
-        message: e.message || "로그아웃 처리 중 오류가 발생했습니다.",
-      });
-    }
     return res.status(500).json({
       status: "error",
-      message: "로그아웃 처리 중 오류가 발생했습니다.",
+      message: "로그아웃 처리 중 오류 발생",
     });
   }
 };
