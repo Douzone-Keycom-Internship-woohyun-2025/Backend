@@ -12,8 +12,7 @@ export const createPreset = async (req: AuthRequest, res: Response) => {
     if (!userId)
       return res.status(401).json({ status: "fail", message: "인증 필요" });
 
-    const body = createPresetSchema.parse(req.body);
-    const row = await PresetService.create(userId, body);
+    const row = await PresetService.create(userId, req.body);
 
     return res.status(201).json({
       status: "success",
