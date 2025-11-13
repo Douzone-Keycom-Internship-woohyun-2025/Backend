@@ -150,53 +150,6 @@ npm run build && npm start
 
 ---
 
-## 🧪 빠른 테스트 (cURL)
-
-> `TOKEN`에 로그인으로 받은 JWT를 넣어서 테스트하세요.
-
-### 프리셋 생성
-```bash
-curl -X POST http://localhost:3000/presets \
- -H "Authorization: Bearer $TOKEN" \
- -H "Content-Type: application/json" \
- -d '{
-   "presetName":"삼성 2024년 분석",
-   "applicant":"삼성전자",
-   "startDate":"20240101",
-   "endDate":"20241231",
-   "description":"삼성의 2024년 특허 분석"
- }'
-```
-
-### 프리셋 목록
-```bash
-curl "http://localhost:3000/presets?skip=0&limit=10" \
- -H "Authorization: Bearer $TOKEN"
-```
-
-### 프리셋 단건 조회
-```bash
-curl http://localhost:3000/presets/1 \
- -H "Authorization: Bearer $TOKEN"
-```
-
-### 프리셋 수정
-```bash
-curl -X PUT http://localhost:3000/presets/1 \
- -H "Authorization: Bearer $TOKEN" \
- -H "Content-Type: application/json" \
- -d '{"description":"수정된 설명"}'
-```
-
-### 프리셋 삭제
-```bash
-curl -i -X DELETE http://localhost:3000/presets/1 \
- -H "Authorization: Bearer $TOKEN"
-# 성공 시 204 No Content
-```
-
----
-
 ## 🧰 개발 가이드
 
 ### 데이터베이스
