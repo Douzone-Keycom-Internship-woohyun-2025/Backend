@@ -6,7 +6,7 @@ const KIPRIS_BASE = process.env.KIPRIS_BASE_URL;
 
 if (!KIPRIS_KEY || !KIPRIS_BASE) {
   throw new Error(
-    "KIPRIS_API_KEY or KIPRIS_BASE_URL is missing in environment"
+    "KIPRIS_API_KEY or KIPRIS_BASE_URL 환경변수 설정이 안되어있습니다."
   );
 }
 
@@ -94,26 +94,28 @@ async function fetchAll(
   let items: PatentItem[] = [...first.items];
 
   const concurrency = 5;
-  let batch: ReturnType<typeof fetchPage>[] = [];
+  let batch: Array<ReturnType<typeof fetchPage>> = [];
+
+  const processBatch = async (
+    batchToProcess: Array<ReturnType<typeof fetchPage>>
+  ) => {
+    if (batchToProcess.length === 0) return;
+    const results = await Promise.all(batchToProcess);
+    items.push(...results.flatMap((r) => r.items));
+  };
 
   for (let page = 2; page <= totalPages; page++) {
     batch.push(fetchPage(applicant, start, end, page, 100));
 
-    if (batch.length === concurrency) {
-      const results = await Promise.all(batch);
-      for (const r of results) {
-        items.push(...r.items);
-      }
+    if (batch.length >= concurrency) {
+      await processBatch(batch);
       batch = [];
       await sleep(200);
     }
   }
 
   if (batch.length > 0) {
-    const results = await Promise.all(batch);
-    for (const r of results) {
-      items.push(...r.items);
-    }
+    await processBatch(batch);
   }
 
   return items;
