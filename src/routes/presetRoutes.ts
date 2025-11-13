@@ -19,7 +19,7 @@ router.use(requireAuth);
 router.post("/", validate(createPresetSchema), createPreset);
 router.get("/", listPresets);
 router.get("/:presetId", getPreset);
-router.put("/:presetId", validate(updatePresetSchema), updatePreset);
+router.patch("/:presetId", validate(updatePresetSchema), updatePreset);
 router.delete("/:presetId", deletePreset);
 
 export default router;
