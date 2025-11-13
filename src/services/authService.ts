@@ -54,7 +54,10 @@ export const AuthService = {
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) throw new Error("이메일 또는 비밀번호 오류");
 
-    const accessToken = generateAccessToken({ email });
+    const accessToken = generateAccessToken({
+      email,
+      userId: user.user_tblkey,
+    });
 
     const refreshToken = generateRefreshToken();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);

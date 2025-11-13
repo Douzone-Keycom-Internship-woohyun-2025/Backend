@@ -10,12 +10,12 @@ function parseId(raw: string): number | null {
 
 export const createPreset = async (req: AuthRequest, res: Response) => {
   try {
-    const email = req.user?.email;
-    if (!email) {
+    const userId = req.user?.userId;
+    if (!userId) {
       return res.status(401).json({ status: "fail", message: "인증 필요" });
     }
 
-    const row = await PresetService.create(email, req.body);
+    const row = await PresetService.create(userId, req.body);
 
     return res.status(201).json({
       status: "success",
@@ -38,8 +38,8 @@ export const createPreset = async (req: AuthRequest, res: Response) => {
 
 export const listPresets = async (req: AuthRequest, res: Response) => {
   try {
-    const email = req.user?.email;
-    if (!email) {
+    const userId = req.user?.userId;
+    if (!userId) {
       return res.status(401).json({ status: "fail", message: "인증 필요" });
     }
 
@@ -52,7 +52,7 @@ export const listPresets = async (req: AuthRequest, res: Response) => {
         ? Math.min(Math.floor(rawLimit), 100)
         : 10;
 
-    const { rows, total } = await PresetService.list(email, skip, limit);
+    const { rows, total } = await PresetService.list(userId, skip, limit);
     const page = Math.floor(skip / Math.max(1, limit)) + 1;
     const totalPages = Math.max(1, Math.ceil(total / Math.max(1, limit)));
 
@@ -82,8 +82,8 @@ export const listPresets = async (req: AuthRequest, res: Response) => {
 
 export const getPreset = async (req: AuthRequest, res: Response) => {
   try {
-    const email = req.user?.email;
-    if (!email) {
+    const userId = req.user?.userId;
+    if (!userId) {
       return res.status(401).json({ status: "fail", message: "인증 필요" });
     }
 
@@ -92,7 +92,7 @@ export const getPreset = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ status: "fail", message: "잘못된 ID" });
     }
 
-    const r = await PresetService.get(email, presetId);
+    const r = await PresetService.get(userId, presetId);
 
     return res.json({
       status: "success",
@@ -116,8 +116,8 @@ export const getPreset = async (req: AuthRequest, res: Response) => {
 
 export const updatePreset = async (req: AuthRequest, res: Response) => {
   try {
-    const email = req.user?.email;
-    if (!email) {
+    const userId = req.user?.userId;
+    if (!userId) {
       return res.status(401).json({ status: "fail", message: "인증 필요" });
     }
 
@@ -126,8 +126,12 @@ export const updatePreset = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ status: "fail", message: "잘못된 ID" });
     }
 
-    await PresetService.update(email, presetId, req.body);
-    return res.json({ status: "success", message: "프리셋이 수정되었습니다." });
+    await PresetService.update(userId, presetId, req.body);
+
+    return res.json({
+      status: "success",
+      message: "프리셋이 수정되었습니다.",
+    });
   } catch (e: unknown) {
     if (e instanceof NotFoundError) {
       return res.status(404).json({ status: "fail", message: e.message });
@@ -138,8 +142,8 @@ export const updatePreset = async (req: AuthRequest, res: Response) => {
 
 export const deletePreset = async (req: AuthRequest, res: Response) => {
   try {
-    const email = req.user?.email;
-    if (!email) {
+    const userId = req.user?.userId;
+    if (!userId) {
       return res.status(401).json({ status: "fail", message: "인증 필요" });
     }
 
@@ -148,7 +152,7 @@ export const deletePreset = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ status: "fail", message: "잘못된 ID" });
     }
 
-    await PresetService.remove(email, presetId);
+    await PresetService.remove(userId, presetId);
 
     return res.status(204).end();
   } catch (e: unknown) {
