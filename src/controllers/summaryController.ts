@@ -1,15 +1,15 @@
-import { Response } from "express";
+import { Response, NextFunction } from "express";
 import { AuthRequest } from "../types/auth";
 import { PresetService } from "../services/presetService";
 import { SummaryService } from "../services/summaryService";
-import { NotFoundError } from "../errors/notFoundError";
 
-export const getSummary = async (req: AuthRequest, res: Response) => {
+export const getSummary = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const userId = req.user?.userId;
-    if (!userId) {
-      return res.status(401).json({ status: "fail", message: "인증 필요" });
-    }
+    const userId = req.user!.userId;
 
     const presetId = req.query.presetId ? Number(req.query.presetId) : null;
 
@@ -51,13 +51,7 @@ export const getSummary = async (req: AuthRequest, res: Response) => {
         ...summary,
       },
     });
-  } catch (e: unknown) {
-    if (e instanceof NotFoundError) {
-      return res.status(404).json({ status: "fail", message: e.message });
-    }
-    console.error("요약 분석 에러:", e);
-    return res
-      .status(500)
-      .json({ status: "error", message: "요약 분석 중 서버 오류" });
+  } catch (err) {
+    next(err);
   }
 };

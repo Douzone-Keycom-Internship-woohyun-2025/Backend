@@ -1,7 +1,11 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { AuthService } from "../services/authService";
 
-export const signup = async (req: Request, res: Response) => {
+export const signup = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { email, password } = req.body;
     const result = await AuthService.signup(email, password);
@@ -10,15 +14,16 @@ export const signup = async (req: Request, res: Response) => {
       message: "회원가입 성공",
       data: result,
     });
-  } catch (e: unknown) {
-    return res.status(400).json({
-      status: "fail",
-      message: e instanceof Error ? e.message : "등록 실패",
-    });
+  } catch (err) {
+    next(err);
   }
 };
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { email, password } = req.body;
     const result = await AuthService.login(email, password);
@@ -27,15 +32,16 @@ export const login = async (req: Request, res: Response) => {
       message: "로그인 성공",
       data: result,
     });
-  } catch (e: unknown) {
-    return res.status(401).json({
-      status: "fail",
-      message: e instanceof Error ? e.message : "로그인 실패",
-    });
+  } catch (err) {
+    next(err);
   }
 };
 
-export const refresh = async (req: Request, res: Response) => {
+export const refresh = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { refreshToken } = req.body;
 
@@ -53,15 +59,16 @@ export const refresh = async (req: Request, res: Response) => {
       message: "토큰 재발급 성공",
       data: result,
     });
-  } catch (e: unknown) {
-    return res.status(401).json({
-      status: "fail",
-      message: "refresh token invalid",
-    });
+  } catch (err) {
+    next(err);
   }
 };
 
-export const logout = async (req: Request, res: Response) => {
+export const logout = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { refreshToken } = req.body;
 
@@ -78,10 +85,7 @@ export const logout = async (req: Request, res: Response) => {
       status: "success",
       message: "로그아웃 완료",
     });
-  } catch (e: unknown) {
-    return res.status(500).json({
-      status: "error",
-      message: "로그아웃 처리 중 오류 발생",
-    });
+  } catch (err) {
+    next(err);
   }
 };
