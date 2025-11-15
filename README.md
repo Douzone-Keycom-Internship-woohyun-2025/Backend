@@ -247,7 +247,7 @@ main            → 프로덕션
 구현 완료: 10개
 미구현: 7개
 
-완성도: 58.8%
+완성도: 70.8%
 ```
 | 엔드포인트 | 상태 || 엔드포인트 | 상태 |
 |---|---|
@@ -261,9 +261,9 @@ main            → 프로덕션
 | Presets: PATCH /presets/:presetId | ✅ 완료 |
 | Presets: DELETE /presets/:presetId | ✅ 완료 |
 | Summary: GET /summary | ✅ 완료 |
-| Patents: POST /patents/search/basic | ⏳ 미구현 |
-| Patents: POST /patents/search/advanced | ⏳ 미구현 |
-| Patents: GET /patents/:applicationNumber | ⏳ 미구현 |
+| Patents: POST /patents/search/basic | ✅ 완료 |
+| Patents: POST /patents/search/advanced | ✅ 완료 |
+| Patents: GET /patents/:applicationNumber | ✅ 완료 |
 | Favorites: GET /favorites/list | ⏳ 미구현 |
 | Favorites: POST /favorites | ⏳ 미구현 |
 | Favorites: GET /favorites/:applicationNumber | ⏳ 미구현 |
