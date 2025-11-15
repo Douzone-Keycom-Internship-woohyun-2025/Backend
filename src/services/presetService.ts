@@ -1,4 +1,3 @@
-// src/services/presetService.ts
 import { NotFoundError } from "../errors/notFoundError";
 import { PresetRepository } from "../repositories/presetRepository";
 import { PresetPayload } from "../types/preset";
