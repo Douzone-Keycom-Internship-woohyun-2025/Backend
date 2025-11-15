@@ -4,6 +4,7 @@ import { pool } from "./config/db";
 import authRoutes from "./routes/authRoutes";
 import presetRoutes from "./routes/presetRoutes";
 import summaryRoutes from "./routes/summaryRoutes";
+import patentRoutes from "./routes/patentRoutes";
 
 const app = express();
 app.use(cors());
@@ -20,7 +21,8 @@ app.get("/health", async (_req, res) => {
 });
 
 app.use("/users", authRoutes);
-app.use("/presets", presetRoutes);
 app.use("/summary", summaryRoutes);
+app.use("/patents", patentRoutes);
+app.use("/presets", presetRoutes);
 
 export default app;
