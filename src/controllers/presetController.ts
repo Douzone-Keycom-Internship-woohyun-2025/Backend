@@ -1,20 +1,19 @@
-import { Response } from "express";
+import { Response, NextFunction } from "express";
 import { AuthRequest } from "../types/auth";
 import { PresetService } from "../services/presetService";
-import { NotFoundError } from "../errors/notFoundError";
 
 function parseId(raw: string): number | null {
   const n = Number(raw);
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : null;
 }
 
-export const createPreset = async (req: AuthRequest, res: Response) => {
+export const createPreset = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const userId = req.user?.userId;
-    if (!userId) {
-      return res.status(401).json({ status: "fail", message: "인증 필요" });
-    }
-
+    const userId = req.user!.userId;
     const row = await PresetService.create(userId, req.body);
 
     return res.status(201).json({
@@ -30,18 +29,18 @@ export const createPreset = async (req: AuthRequest, res: Response) => {
         createdAt: row.adddate,
       },
     });
-  } catch (e: unknown) {
-    console.error("프리셋 생성 에러:", e);
-    return res.status(500).json({ status: "error", message: "서버 오류" });
+  } catch (err) {
+    next(err);
   }
 };
 
-export const listPresets = async (req: AuthRequest, res: Response) => {
+export const listPresets = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const userId = req.user?.userId;
-    if (!userId) {
-      return res.status(401).json({ status: "fail", message: "인증 필요" });
-    }
+    const userId = req.user!.userId;
 
     const rawSkip = Number(req.query.skip ?? 0);
     const rawLimit = Number(req.query.limit ?? 10);
@@ -74,18 +73,18 @@ export const listPresets = async (req: AuthRequest, res: Response) => {
         })),
       },
     });
-  } catch (e: unknown) {
-    console.error("프리셋 목록 조회 에러:", e);
-    return res.status(500).json({ status: "error", message: "서버 오류" });
+  } catch (err) {
+    next(err);
   }
 };
 
-export const getPreset = async (req: AuthRequest, res: Response) => {
+export const getPreset = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const userId = req.user?.userId;
-    if (!userId) {
-      return res.status(401).json({ status: "fail", message: "인증 필요" });
-    }
+    const userId = req.user!.userId;
 
     const presetId = parseId(req.params.presetId);
     if (!presetId) {
@@ -106,20 +105,18 @@ export const getPreset = async (req: AuthRequest, res: Response) => {
         createdAt: r.adddate,
       },
     });
-  } catch (e: unknown) {
-    if (e instanceof NotFoundError) {
-      return res.status(404).json({ status: "fail", message: e.message });
-    }
-    return res.status(500).json({ status: "error", message: "서버 오류" });
+  } catch (err) {
+    next(err);
   }
 };
 
-export const updatePreset = async (req: AuthRequest, res: Response) => {
+export const updatePreset = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const userId = req.user?.userId;
-    if (!userId) {
-      return res.status(401).json({ status: "fail", message: "인증 필요" });
-    }
+    const userId = req.user!.userId;
 
     const presetId = parseId(req.params.presetId);
     if (!presetId) {
@@ -132,20 +129,18 @@ export const updatePreset = async (req: AuthRequest, res: Response) => {
       status: "success",
       message: "프리셋이 수정되었습니다.",
     });
-  } catch (e: unknown) {
-    if (e instanceof NotFoundError) {
-      return res.status(404).json({ status: "fail", message: e.message });
-    }
-    return res.status(500).json({ status: "error", message: "서버 오류" });
+  } catch (err) {
+    next(err);
   }
 };
 
-export const deletePreset = async (req: AuthRequest, res: Response) => {
+export const deletePreset = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const userId = req.user?.userId;
-    if (!userId) {
-      return res.status(401).json({ status: "fail", message: "인증 필요" });
-    }
+    const userId = req.user!.userId;
 
     const presetId = parseId(req.params.presetId);
     if (!presetId) {
@@ -155,10 +150,7 @@ export const deletePreset = async (req: AuthRequest, res: Response) => {
     await PresetService.remove(userId, presetId);
 
     return res.status(204).end();
-  } catch (e: unknown) {
-    if (e instanceof NotFoundError) {
-      return res.status(404).json({ status: "fail", message: e.message });
-    }
-    return res.status(500).json({ status: "error", message: "서버 오류" });
+  } catch (err) {
+    next(err);
   }
 };
