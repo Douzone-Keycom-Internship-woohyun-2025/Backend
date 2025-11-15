@@ -2,8 +2,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { UserRepository } from "../repositories/authRepository";
 import { RefreshTokenRepository } from "../repositories/refreshTokenRepository";
+import { JWT_SECRET } from "../config/env";
 
-const JWT_SECRET = process.env.JWT_SECRET!;
 const SALT_ROUNDS = 12;
 
 function normalizeEmail(e: string) {
