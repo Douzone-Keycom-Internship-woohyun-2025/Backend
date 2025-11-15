@@ -2,8 +2,10 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { UserRepository } from "../repositories/authRepository";
 import { RefreshTokenRepository } from "../repositories/refreshTokenRepository";
+import { JWT_SECRET } from "../config/env";
+import { BadRequestError } from "../errors/badRequestError";
+import { UnauthorizedError } from "../errors/unauthorizedError";
 
-const JWT_SECRET = process.env.JWT_SECRET!;
 const SALT_ROUNDS = 12;
 
 function normalizeEmail(e: string) {
@@ -22,10 +24,14 @@ export const AuthService = {
   async signup(email: string, password: string) {
     email = normalizeEmail(email);
 
-    if (password.length < 8) throw new Error("비밀번호는 최소 8자 이상");
+    if (password.length < 8) {
+      throw new BadRequestError("비밀번호는 최소 8자 이상");
+    }
 
     const exists = await UserRepository.findByEmail(email);
-    if (exists) throw new Error("이미 가입된 이메일입니다.");
+    if (exists) {
+      throw new BadRequestError("이미 가입된 이메일입니다.");
+    }
 
     const hashed = await bcrypt.hash(password, SALT_ROUNDS);
     const user = await UserRepository.create(email, hashed);
@@ -49,10 +55,14 @@ export const AuthService = {
     email = normalizeEmail(email);
 
     const user = await UserRepository.findByEmail(email);
-    if (!user) throw new Error("이메일 또는 비밀번호 오류");
+    if (!user) {
+      throw new UnauthorizedError("이메일 또는 비밀번호 오류");
+    }
 
     const match = await bcrypt.compare(password, user.password_hash);
-    if (!match) throw new Error("이메일 또는 비밀번호 오류");
+    if (!match) {
+      throw new UnauthorizedError("이메일 또는 비밀번호 오류");
+    }
 
     const accessToken = generateAccessToken({
       email,
@@ -70,12 +80,13 @@ export const AuthService = {
 
   async refresh(refreshToken: string) {
     const stored = await RefreshTokenRepository.find(refreshToken);
-    if (!stored) throw new Error("refresh token invalid");
+    if (!stored) {
+      throw new UnauthorizedError("refresh token invalid");
+    }
 
     jwt.verify(refreshToken, JWT_SECRET);
 
     const email = stored.email;
-
     const accessToken = generateAccessToken({ email });
 
     return { accessToken };
