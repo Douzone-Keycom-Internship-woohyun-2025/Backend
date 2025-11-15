@@ -5,6 +5,7 @@ import authRoutes from "./routes/authRoutes";
 import presetRoutes from "./routes/presetRoutes";
 import summaryRoutes from "./routes/summaryRoutes";
 import patentRoutes from "./routes/patentRoutes";
+import { errorHandler } from "./middlewares/errorHandler";
 
 const app = express();
 app.use(cors());
@@ -24,5 +25,7 @@ app.use("/users", authRoutes);
 app.use("/summary", summaryRoutes);
 app.use("/patents", patentRoutes);
 app.use("/presets", presetRoutes);
+
+app.use(errorHandler);
 
 export default app;

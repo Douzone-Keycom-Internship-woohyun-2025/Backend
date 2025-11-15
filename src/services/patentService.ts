@@ -1,8 +1,11 @@
 import axios from "axios";
 import xml2js from "xml2js";
+import { KIPRIS_KEY, KIPRIS_BASE } from "../config/env";
+import { PatentListResult, PatentItemRaw } from "../types/kipris";
+import { DEFAULT_ROWS_PER_PAGE } from "../constants/pagination";
+import { NotFoundError } from "../errors/notFoundError";
 
-const KIPRIS_KEY = process.env.KIPRIS_API_KEY!;
-const KIPRIS_BASE = process.env.KIPRIS_BASE_URL!;
+const KIPRIS_ADVANCED_SEARCH_URL = `${KIPRIS_BASE}/kipo-api/kipi/patUtiModInfoSearchSevice/getAdvancedSearch`;
 
 function ensureArray(v: any) {
   if (!v) return [];
@@ -22,12 +25,41 @@ const statusMap: Record<string, string> = {
   거절: "J",
   등록: "R",
   "": "",
-  undefined: "",
 };
 
-async function searchPatents(params: any) {
-  const url = `${KIPRIS_BASE}/kipo-api/kipi/patUtiModInfoSearchSevice/getAdvancedSearch`;
-  const res = await axios.get(url, { params });
+interface PatentSearchParmas {
+  applicant?: string;
+  startDate: string;
+  endDate: string;
+  page?: number;
+}
+
+interface PatentAdvancedSearchParams {
+  applicant?: string;
+  inventionTitle?: string;
+  registerStatus?: string;
+  startDate: string;
+  endDate: string;
+  page?: number;
+}
+
+type SearchParams =
+  | PatentRequestParams
+  | { applicationNumber: string; ServiceKey: string };
+
+interface PatentRequestParams {
+  applicant?: string;
+  inventionTitle?: string;
+  lastvalue?: string;
+  patent?: boolean;
+  ServiceKey: string;
+  applicationDate: string;
+  pageNo: number;
+  numOfRows: number;
+}
+
+async function searchPatents(params: SearchParams) {
+  const res = await axios.get(KIPRIS_ADVANCED_SEARCH_URL, { params });
 
   const json = await parseXml(res.data);
   const body = json?.response?.body;
@@ -36,7 +68,7 @@ async function searchPatents(params: any) {
   return {
     items: ensureArray(body?.items?.item),
     total: Number(count?.totalCount ?? 0),
-    numOfRows: Number(count?.numOfRows ?? 20),
+    numOfRows: Number(count?.numOfRows ?? DEFAULT_ROWS_PER_PAGE),
     pageNo: Number(count?.pageNo ?? 1),
   };
 }
@@ -47,19 +79,14 @@ export const PatentService = {
     startDate,
     endDate,
     page = 1,
-  }: {
-    applicant: string;
-    startDate: string;
-    endDate: string;
-    page: number;
-  }) {
-    const params = {
+  }: PatentSearchParmas): Promise<PatentListResult> {
+    const params: PatentRequestParams = {
       applicant,
       patent: true,
       ServiceKey: KIPRIS_KEY,
       applicationDate: `${startDate}~${endDate}`,
       pageNo: page,
-      numOfRows: 20,
+      numOfRows: DEFAULT_ROWS_PER_PAGE,
     };
 
     const r = await searchPatents(params);
@@ -79,10 +106,10 @@ export const PatentService = {
     startDate,
     endDate,
     page = 1,
-  }: any) {
-    const lastvalue = statusMap[registerStatus] ?? "";
+  }: PatentAdvancedSearchParams): Promise<PatentListResult> {
+    const lastvalue = statusMap[registerStatus ?? ""] ?? "";
 
-    const params = {
+    const params: PatentRequestParams = {
       applicant,
       inventionTitle,
       lastvalue,
@@ -90,7 +117,7 @@ export const PatentService = {
       ServiceKey: KIPRIS_KEY,
       applicationDate: `${startDate}~${endDate}`,
       pageNo: page,
-      numOfRows: 20,
+      numOfRows: DEFAULT_ROWS_PER_PAGE,
     };
 
     const r = await searchPatents(params);
@@ -103,21 +130,19 @@ export const PatentService = {
     };
   },
 
-  async getDetail(applicationNumber: string) {
-    const url = `${KIPRIS_BASE}/kipo-api/kipi/patUtiModInfoSearchSevice/getAdvancedSearch`;
-
+  async getDetail(applicationNumber: string): Promise<PatentItemRaw> {
     const params = {
       applicationNumber,
       ServiceKey: KIPRIS_KEY,
     };
 
-    const res = await axios.get(url, { params });
-    const json = await parseXml(res.data);
+    const r = await searchPatents(params);
+    const items = r.items;
 
-    const items = json?.response?.body?.items?.item;
+    if (!items || items.length === 0) {
+      throw new NotFoundError("특허 정보를 찾을 수 없습니다.");
+    }
 
-    if (!items) return null;
-
-    return Array.isArray(items) ? items[0] : items;
+    return items[0];
   },
 };

@@ -1,8 +1,8 @@
 import axios from "axios";
 import xml2js from "xml2js";
 
-const KIPRIS_KEY = process.env.KIPRIS_API_KEY;
-const KIPRIS_BASE = process.env.KIPRIS_BASE_URL;
+import { KIPRIS_KEY } from "../config/env";
+import { KIPRIS_BASE } from "../config/env";
 
 if (!KIPRIS_KEY || !KIPRIS_BASE) {
   throw new Error(
