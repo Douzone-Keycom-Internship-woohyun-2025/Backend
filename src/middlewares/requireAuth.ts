@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { AuthRequest } from "../types/auth";
 import { Request, Response, NextFunction } from "express";
 import { JWT_SECRET } from "../config/env";
+import { UnauthorizedError } from "../errors/unauthorizedError";
 
 export interface AuthPayload {
   userId: number;
@@ -23,8 +24,9 @@ export async function requireAuth(
 ) {
   try {
     const token = getBearerToken(req);
-    if (!token)
-      return res.status(401).json({ status: "fail", message: "토큰 없음" });
+    if (!token) {
+      throw new UnauthorizedError("토큰 없음");
+    }
 
     const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload;
 
@@ -32,17 +34,15 @@ export async function requireAuth(
       userId: decoded.userId,
       email: decoded.email,
     };
+
     next();
   } catch (e: any) {
     if (e.name === "TokenExpiredError") {
-      return res.status(401).json({
-        status: "fail",
-        message: "토큰 만료됨",
-      });
+      return next(new UnauthorizedError("토큰 만료됨"));
     }
-    return res.status(401).json({
-      status: "fail",
-      message: "유효하지 않은 토큰",
-    });
+    if (e.name === "JsonWebTokenError") {
+      return next(new UnauthorizedError("유효하지 않은 토큰"));
+    }
+    next(e);
   }
 }
