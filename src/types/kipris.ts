@@ -12,7 +12,6 @@ export interface PatentItemRaw {
   registerNumber?: string | null;
   registerStatus?: string;
   astrtCont?: string;
-  bigDrawing?: string;
   drawing?: string;
 }
 
