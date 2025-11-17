@@ -30,6 +30,7 @@ export const FavoriteRepository = {
       payload.abstract || null,
       payload.applicationDate,
       payload.applicationNumber,
+      payload.openNumber || null,
       payload.publicationDate || null,
       payload.publicationNumber || null,
       payload.registerDate || null,
