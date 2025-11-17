@@ -7,7 +7,7 @@ export interface FavoriteRow {
   application_date: string;
   application_number: string;
   publication_date: string | null;
-  publication_numner: string | null;
+  publication_number: string | null;
   register_date: string | null;
   register_number: string | null;
   register_status: string | null;
