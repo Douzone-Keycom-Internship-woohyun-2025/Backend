@@ -13,7 +13,7 @@ const router = Router();
 
 router.use(requireAuth);
 router.post("/", validate(createFavoriteSchema), createFavorite);
-router.get("/list", listFavorites);
+router.get("/", listFavorites);
 router.get("/:applicationNumber", getFavorite);
 router.delete("/:applicationNumber", deleteFavorite);
 
