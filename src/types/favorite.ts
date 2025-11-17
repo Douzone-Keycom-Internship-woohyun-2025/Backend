@@ -22,6 +22,7 @@ export interface FavoritePayload {
   abstract?: string;
   applicationDate: string;
   applicationNumber: string;
+  openNumber?: string;
   publicationDate?: string;
   publicationNumber?: string;
   registerDate?: string;
