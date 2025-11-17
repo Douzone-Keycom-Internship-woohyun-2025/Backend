@@ -20,12 +20,12 @@ export const createFavoriteSchema = z.object({
     .string()
     .regex(/^\d{8}$/, "출원일은 YYYYMMDD 형식이어야 합니다 (예: 20240103)"),
 
-  abstract: z.string().max(5000).optional().or(z.literal("")),
-  openNumber: z.string().optional().or(z.literal("")),
-  publicationNumber: z.string().optional().or(z.literal("")),
-  publicationDate: z.string().optional().or(z.literal("")),
-  registerNumber: z.string().optional().or(z.literal("")),
-  registerDate: z.string().optional().or(z.literal("")),
-  registerStatus: z.string().optional().or(z.literal("")),
-  drawingUrl: z.string().optional().or(z.literal("")),
+  abstract: z.string().max(5000).optional(),
+  openNumber: z.string().optional(),
+  publicationNumber: z.string().optional(),
+  publicationDate: z.string().optional(),
+  registerNumber: z.string().optional(),
+  registerDate: z.string().optional(),
+  registerStatus: z.string().optional(),
+  drawingUrl: z.string().optional(),
 });
