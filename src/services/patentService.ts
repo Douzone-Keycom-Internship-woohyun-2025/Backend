@@ -160,7 +160,7 @@ export const PatentService = {
     };
   },
 
-  async getDetail(applicationNumber: string, userId?: number): Promise<any> {
+  async getDetail(applicationNumber: string, userId?: number): Promise<PatentItemRaw> {
     const params: SearchParams = {
       applicationNumber,
       ServiceKey: KIPRIS_KEY,
