@@ -21,3 +21,15 @@ export interface PatentListResult {
   totalPages: number;
   patents: PatentItemRaw[];
 }
+
+export interface SearchParams {
+  applicant?: string;
+  inventionTitle?: string;
+  lastvalue?: string;
+  patent?: boolean;
+  serviceKey: string;
+  applicationDate?: string;
+  applicationNumber?: string;
+  pageNo?: number;
+  numOfRows?: number;
+}
