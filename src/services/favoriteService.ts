@@ -1,4 +1,6 @@
 import { pool } from "../config/db";
+import { FavoriteRepository } from "../repositories/favoriteRepository";
+import { patentIpcSubclassRepository } from "../repositories/patentIpcSubclassRepository";
 import { FavoritePayload } from "../types/favorite";
 import { NotFoundError } from "../errors/notFoundError";
 import { BadRequestError } from "../errors/badRequestError";
@@ -11,6 +13,7 @@ export const FavoriteService = {
     try {
       await client.query("BEGIN");
 
+      // 필수값 체크
       if (!payload.applicationNumber)
         throw new BadRequestError("출원번호는 필수입니다.");
       if (!payload.inventionTitle)
@@ -20,124 +23,58 @@ export const FavoriteService = {
       if (!payload.applicationDate)
         throw new BadRequestError("출원일은 필수입니다.");
 
-      const existing = await client.query(
-        `
-        SELECT 1
-        FROM favorite_patents
-        WHERE user_tblkey = $1 AND application_number = $2
-        `,
-        [userId, payload.applicationNumber]
+      // 중복 체크
+      const existing = await FavoriteRepository.findByApplicationNumber(
+        userId,
+        payload.applicationNumber
       );
-
-      if (existing.rows.length > 0)
+      if (existing)
         throw new BadRequestError("이미 즐겨찾기에 추가된 특허입니다.");
 
-      const insertFavorite = await client.query(
-        `
-        INSERT INTO favorite_patents (
-          user_tblkey,
-          invention_title,
-          applicant_name,
-          abstract,
-          application_date,
-          application_number,
-          open_number,
-          publication_date,
-          publication_number,
-          register_date,
-          register_number,
-          register_status,
-          drawing_url,
-          main_ipc_code
-        )
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
-        RETURNING *
-        `,
-        [
-          userId,
-          payload.inventionTitle,
-          payload.applicantName,
-          payload.abstract || null,
-          payload.applicationDate,
-          payload.applicationNumber,
-          payload.openNumber || null,
-          payload.publicationDate || null,
-          payload.publicationNumber || null,
-          payload.registerDate || null,
-          payload.registerNumber || null,
-          payload.registerStatus || null,
-          payload.drawingUrl || null,
-          payload.mainIpcCode || null,
-        ]
-      );
+      // 즐겨찾기 등록
+      const favorite = await FavoriteRepository.create(userId, payload);
 
-      const favorite = insertFavorite.rows[0];
+      // IPC subclass 매핑 저장
+      if (payload.ipcNumber?.trim()) {
+        const rawCodes = payload.ipcNumber.split("|").map((v) => v.trim());
 
-      if (payload.ipcNumber && payload.ipcNumber.trim() !== "") {
-        const rawCodes = payload.ipcNumber.split("|").map((c) => c.trim());
         const subclassList = rawCodes
           .map((c) => extractSubclass(c))
           .filter((v): v is string => v !== null);
 
-        for (const subclass of subclassList) {
-          await client.query(
-            `
-            INSERT INTO patent_ipc_subclass_map (patent_tblkey, ipc_subclass)
-            VALUES ($1, $2)
-            ON CONFLICT DO NOTHING
-            `,
-            [favorite.patent_tblkey, subclass]
+        if (subclassList.length > 0) {
+          await patentIpcSubclassRepository.addMappings(
+            favorite.patent_tblkey,
+            subclassList
           );
         }
       }
 
       await client.query("COMMIT");
-
       return favorite;
-    } catch (error) {
+    } catch (e) {
       await client.query("ROLLBACK");
-      throw error;
+      throw e;
     } finally {
       client.release();
     }
   },
 
   async list(userId: number) {
-    const result = await pool.query(
-      `
-      SELECT *
-      FROM favorite_patents
-      WHERE user_tblkey = $1
-      ORDER BY adddate DESC
-      `,
-      [userId]
-    );
-    return result.rows;
+    return FavoriteRepository.list(userId);
   },
 
   async get(userId: number, applicationNumber: string) {
-    const result = await pool.query(
-      `
-      SELECT *
-      FROM favorite_patents
-      WHERE user_tblkey = $1 AND application_number = $2
-      `,
-      [userId, applicationNumber]
+    const favorite = await FavoriteRepository.findByApplicationNumber(
+      userId,
+      applicationNumber
     );
-    if (result.rows.length === 0)
-      throw new NotFoundError("즐겨찾기를 찾을 수 없습니다.");
-    return result.rows[0];
+    if (!favorite) throw new NotFoundError("즐겨찾기를 찾을 수 없습니다.");
+    return favorite;
   },
 
   async remove(userId: number, applicationNumber: string) {
-    const result = await pool.query(
-      `
-      DELETE FROM favorite_patents
-      WHERE user_tblkey = $1 AND application_number = $2
-      `,
-      [userId, applicationNumber]
-    );
-    if (result.rowCount === 0)
-      throw new NotFoundError("즐겨찾기를 찾을 수 없습니다.");
+    const deleted = await FavoriteRepository.delete(userId, applicationNumber);
+    if (!deleted) throw new NotFoundError("즐겨찾기를 찾을 수 없습니다.");
   },
 };
