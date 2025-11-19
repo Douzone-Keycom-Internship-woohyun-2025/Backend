@@ -1,6 +1,6 @@
 import { pool } from "../config/db";
 
-export const PatentIpcRepository = {
+export const patentIpcSubclassRepository = {
   async addMappings(patentId: number, ipcList: string[]) {
     if (ipcList.length === 0) return;
 

@@ -4,7 +4,7 @@ import { KIPRIS_KEY, KIPRIS_BASE } from "../config/env";
 import { PatentListResult, PatentItemRaw } from "../types/kipris";
 import { DEFAULT_ROWS_PER_PAGE } from "../controllers/constants/pagination";
 import { NotFoundError } from "../errors/notFoundError";
-import { IpcRepository } from "../repositories/patentRepository";
+import { IpcSubclassDictionary } from "../repositories/ipcSubclassDictionary";
 
 const KIPRIS_ADVANCED_SEARCH_URL = `${KIPRIS_BASE}/kipo-api/kipi/patUtiModInfoSearchSevice/getAdvancedSearch`;
 
@@ -52,7 +52,7 @@ async function addIpcMapping(items: PatentItemRaw[]): Promise<PatentItemRaw[]> {
   return items.map((item) => {
     const mainIpcCode = extractMainIpcCode(item.ipcNumber);
     const ipcKorName = mainIpcCode
-      ? IpcRepository.getKorName(mainIpcCode) ?? "알 수 없음"
+      ? IpcSubclassDictionary.getKorName(mainIpcCode) ?? "알 수 없음"
       : undefined;
     return {
       ...item,
