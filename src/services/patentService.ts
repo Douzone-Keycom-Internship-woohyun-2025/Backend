@@ -64,6 +64,23 @@ async function addIpcMapping(items: PatentItemRaw[]): Promise<PatentItemRaw[]> {
   });
 }
 
+async function attachFavoriteInfo(
+  userId: number | undefined,
+  items: PatentItemRaw[]
+) {
+  if (!userId) {
+    return items.map((p) => ({ ...p, isFavorite: false }));
+  }
+
+  const favList = await FavoriteRepository.getUserFavoriteNumbers(userId);
+  const favSet = new Set(favList);
+
+  return items.map((p) => ({
+    ...p,
+    isFavorite: p.applicationNumber ? favSet.has(p.applicationNumber) : false,
+  }));
+}
+
 export const PatentService = {
   async basicSearch({
     userId,
@@ -81,33 +98,22 @@ export const PatentService = {
     const params: SearchParams = {
       applicant,
       patent: true,
-      ServiceKey: KIPRIS_KEY, // ✔ 수정됨
+      ServiceKey: KIPRIS_KEY, // ✔ SearchParams 타입에 맞춤
       applicationDate: `${startDate}~${endDate}`,
       pageNo: page,
       numOfRows: DEFAULT_ROWS_PER_PAGE,
     };
 
     const r = await searchPatents(params);
-    const patentsWithMapping = await addIpcMapping(r.items);
 
-    // 🔥 즐겨찾기 여부 비교
-    const favList = userId
-      ? await FavoriteRepository.getUserFavoriteNumbers(userId)
-      : [];
-    const favSet = new Set(favList);
-
-    const patentsWithFav = patentsWithMapping.map((p) => ({
-      ...p,
-      isFavorite: p.applicationNumber
-        ? favSet.has(p.applicationNumber)
-        : false,
-    }));
+    const mapped = await addIpcMapping(r.items);
+    const withFav = await attachFavoriteInfo(userId, mapped);
 
     return {
       total: r.total,
       page: r.pageNo,
       totalPages: Math.ceil(r.total / r.numOfRows),
-      patents: patentsWithFav,
+      patents: withFav,
     };
   },
 
@@ -135,59 +141,49 @@ export const PatentService = {
       inventionTitle,
       lastvalue,
       patent: true,
-      ServiceKey: KIPRIS_KEY, // ✔
+      ServiceKey: KIPRIS_KEY,
       applicationDate: `${startDate}~${endDate}`,
       pageNo: page,
       numOfRows: DEFAULT_ROWS_PER_PAGE,
     };
 
     const r = await searchPatents(params);
-    const patentsWithMapping = await addIpcMapping(r.items);
 
-    let favList: string[] = [];
-    if (userId)
-      favList = await FavoriteRepository.getUserFavoriteNumbers(userId);
-
-    const patentsWithFav = patentsWithMapping.map((p) => ({
-      ...p,
-      isFavorite: p.applicationNumber
-        ? favList.includes(p.applicationNumber)
-        : false,
-    }));
+    const mapped = await addIpcMapping(r.items);
+    const withFav = await attachFavoriteInfo(userId, mapped);
 
     return {
       total: r.total,
       page: r.pageNo,
       totalPages: Math.ceil(r.total / r.numOfRows),
-      patents: patentsWithFav,
+      patents: withFav,
     };
   },
 
-  async getDetail(applicationNumber: string, userId?: number): Promise<PatentItemRaw> {
+  async getDetail(applicationNumber: string, userId?: number): Promise<any> {
     const params: SearchParams = {
       applicationNumber,
-      ServiceKey: KIPRIS_KEY, // ✔
+      ServiceKey: KIPRIS_KEY,
     };
 
     const r = await searchPatents(params);
-    const items = r.items;
 
-    if (!items || items.length === 0) {
+    if (!r.items || r.items.length === 0) {
       throw new NotFoundError("특허 정보를 찾을 수 없습니다.");
     }
 
-    const [item] = await addIpcMapping(items);
+    const [item] = await addIpcMapping(r.items);
 
-    // 🔥 favorite 여부 포함
+    // ✔ 단일 조회 최적화
     let isFavorite = false;
     if (userId) {
-      const favList = await FavoriteRepository.getUserFavoriteNumbers(userId);
-      isFavorite = favList.includes(applicationNumber);
+      const fav = await FavoriteRepository.findByApplicationNumber(
+        userId,
+        applicationNumber
+      );
+      isFavorite = !!fav;
     }
 
-    return {
-      ...item,
-      isFavorite,
-    };
+    return { ...item, isFavorite };
   },
 };
