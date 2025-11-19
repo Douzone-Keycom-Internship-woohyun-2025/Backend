@@ -5,6 +5,7 @@ import { PatentListResult, PatentItemRaw, SearchParams } from "../types/kipris";
 import { DEFAULT_ROWS_PER_PAGE } from "../controllers/constants/pagination";
 import { NotFoundError } from "../errors/notFoundError";
 import { IpcSubclassDictionary } from "../repositories/ipcSubclassDictionary";
+import { FavoriteRepository } from "../repositories/favoriteRepository";
 
 const KIPRIS_ADVANCED_SEARCH_URL = `${KIPRIS_BASE}/kipo-api/kipi/patUtiModInfoSearchSevice/getAdvancedSearch`;
 
@@ -54,6 +55,7 @@ async function addIpcMapping(items: PatentItemRaw[]): Promise<PatentItemRaw[]> {
     const ipcKorName = mainIpcCode
       ? IpcSubclassDictionary.getKorName(mainIpcCode) ?? "알 수 없음"
       : undefined;
+
     return {
       ...item,
       mainIpcCode,
@@ -62,19 +64,38 @@ async function addIpcMapping(items: PatentItemRaw[]): Promise<PatentItemRaw[]> {
   });
 }
 
+async function attachFavoriteInfo(
+  userId: number | undefined,
+  items: PatentItemRaw[]
+) {
+  if (!userId) {
+    return items.map((p) => ({ ...p, isFavorite: false }));
+  }
+
+  const favList = await FavoriteRepository.getUserFavoriteNumbers(userId);
+  const favSet = new Set(favList);
+
+  return items.map((p) => ({
+    ...p,
+    isFavorite: p.applicationNumber ? favSet.has(p.applicationNumber) : false,
+  }));
+}
+
 export const PatentService = {
   async basicSearch({
+    userId,
     applicant,
     startDate,
     endDate,
     page = 1,
   }: {
+    userId?: number;
     applicant?: string;
     startDate: string;
     endDate: string;
     page?: number;
   }): Promise<PatentListResult> {
-    const params = {
+    const params: SearchParams = {
       applicant,
       patent: true,
       ServiceKey: KIPRIS_KEY,
@@ -84,17 +105,20 @@ export const PatentService = {
     };
 
     const r = await searchPatents(params);
-    const patentsWithMapping = await addIpcMapping(r.items);
+
+    const mapped = await addIpcMapping(r.items);
+    const withFav = await attachFavoriteInfo(userId, mapped);
 
     return {
       total: r.total,
       page: r.pageNo,
       totalPages: Math.ceil(r.total / r.numOfRows),
-      patents: patentsWithMapping,
+      patents: withFav,
     };
   },
 
   async advancedSearch({
+    userId,
     applicant,
     inventionTitle,
     registerStatus,
@@ -102,6 +126,7 @@ export const PatentService = {
     endDate,
     page = 1,
   }: {
+    userId?: number;
     applicant?: string;
     inventionTitle?: string;
     registerStatus?: string;
@@ -110,7 +135,8 @@ export const PatentService = {
     page?: number;
   }): Promise<PatentListResult> {
     const lastvalue = statusMap[registerStatus ?? ""] ?? "";
-    const params = {
+
+    const params: SearchParams = {
       applicant,
       inventionTitle,
       lastvalue,
@@ -122,30 +148,42 @@ export const PatentService = {
     };
 
     const r = await searchPatents(params);
-    const patentsWithMapping = await addIpcMapping(r.items);
+
+    const mapped = await addIpcMapping(r.items);
+    const withFav = await attachFavoriteInfo(userId, mapped);
 
     return {
       total: r.total,
       page: r.pageNo,
       totalPages: Math.ceil(r.total / r.numOfRows),
-      patents: patentsWithMapping,
+      patents: withFav,
     };
   },
 
-  async getDetail(applicationNumber: string): Promise<PatentItemRaw> {
-    const params = {
+  async getDetail(applicationNumber: string, userId?: number): Promise<PatentItemRaw> {
+    const params: SearchParams = {
       applicationNumber,
       ServiceKey: KIPRIS_KEY,
     };
 
     const r = await searchPatents(params);
-    const items = r.items;
 
-    if (!items || items.length === 0) {
+    if (!r.items || r.items.length === 0) {
       throw new NotFoundError("특허 정보를 찾을 수 없습니다.");
     }
 
-    const [item] = await addIpcMapping(items);
-    return item;
+    const [item] = await addIpcMapping(r.items);
+
+    // ✔ 단일 조회 최적화
+    let isFavorite = false;
+    if (userId) {
+      const fav = await FavoriteRepository.findByApplicationNumber(
+        userId,
+        applicationNumber
+      );
+      isFavorite = !!fav;
+    }
+
+    return { ...item, isFavorite };
   },
 };
