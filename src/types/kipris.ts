@@ -13,6 +13,9 @@ export interface PatentItemRaw {
   registerStatus?: string;
   astrtCont?: string;
   drawing?: string;
+  mainIpcCode?: string;
+  ipcKorName?: string;
+  isFavorite?: boolean;
 }
 
 export interface PatentListResult {
@@ -27,7 +30,7 @@ export interface SearchParams {
   inventionTitle?: string;
   lastvalue?: string;
   patent?: boolean;
-  serviceKey: string;
+  ServiceKey: string;
   applicationDate?: string;
   applicationNumber?: string;
   pageNo?: number;

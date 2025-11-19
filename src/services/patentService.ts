@@ -5,6 +5,7 @@ import { PatentListResult, PatentItemRaw, SearchParams } from "../types/kipris";
 import { DEFAULT_ROWS_PER_PAGE } from "../controllers/constants/pagination";
 import { NotFoundError } from "../errors/notFoundError";
 import { IpcSubclassDictionary } from "../repositories/ipcSubclassDictionary";
+import { FavoriteRepository } from "../repositories/favoriteRepository";
 
 const KIPRIS_ADVANCED_SEARCH_URL = `${KIPRIS_BASE}/kipo-api/kipi/patUtiModInfoSearchSevice/getAdvancedSearch`;
 
@@ -54,6 +55,7 @@ async function addIpcMapping(items: PatentItemRaw[]): Promise<PatentItemRaw[]> {
     const ipcKorName = mainIpcCode
       ? IpcSubclassDictionary.getKorName(mainIpcCode) ?? "알 수 없음"
       : undefined;
+
     return {
       ...item,
       mainIpcCode,
@@ -64,20 +66,22 @@ async function addIpcMapping(items: PatentItemRaw[]): Promise<PatentItemRaw[]> {
 
 export const PatentService = {
   async basicSearch({
+    userId,
     applicant,
     startDate,
     endDate,
     page = 1,
   }: {
+    userId?: number;
     applicant?: string;
     startDate: string;
     endDate: string;
     page?: number;
   }): Promise<PatentListResult> {
-    const params = {
+    const params: SearchParams = {
       applicant,
       patent: true,
-      ServiceKey: KIPRIS_KEY,
+      ServiceKey: KIPRIS_KEY, // ✔ 수정됨
       applicationDate: `${startDate}~${endDate}`,
       pageNo: page,
       numOfRows: DEFAULT_ROWS_PER_PAGE,
@@ -86,15 +90,28 @@ export const PatentService = {
     const r = await searchPatents(params);
     const patentsWithMapping = await addIpcMapping(r.items);
 
+    // 🔥 즐겨찾기 여부 비교
+    let favList: string[] = [];
+    if (userId)
+      favList = await FavoriteRepository.getUserFavoriteNumbers(userId);
+
+    const patentsWithFav = patentsWithMapping.map((p) => ({
+      ...p,
+      isFavorite: p.applicationNumber
+        ? favList.includes(p.applicationNumber)
+        : false,
+    }));
+
     return {
       total: r.total,
       page: r.pageNo,
       totalPages: Math.ceil(r.total / r.numOfRows),
-      patents: patentsWithMapping,
+      patents: patentsWithFav,
     };
   },
 
   async advancedSearch({
+    userId,
     applicant,
     inventionTitle,
     registerStatus,
@@ -102,6 +119,7 @@ export const PatentService = {
     endDate,
     page = 1,
   }: {
+    userId?: number;
     applicant?: string;
     inventionTitle?: string;
     registerStatus?: string;
@@ -110,12 +128,13 @@ export const PatentService = {
     page?: number;
   }): Promise<PatentListResult> {
     const lastvalue = statusMap[registerStatus ?? ""] ?? "";
-    const params = {
+
+    const params: SearchParams = {
       applicant,
       inventionTitle,
       lastvalue,
       patent: true,
-      ServiceKey: KIPRIS_KEY,
+      ServiceKey: KIPRIS_KEY, // ✔
       applicationDate: `${startDate}~${endDate}`,
       pageNo: page,
       numOfRows: DEFAULT_ROWS_PER_PAGE,
@@ -124,18 +143,29 @@ export const PatentService = {
     const r = await searchPatents(params);
     const patentsWithMapping = await addIpcMapping(r.items);
 
+    let favList: string[] = [];
+    if (userId)
+      favList = await FavoriteRepository.getUserFavoriteNumbers(userId);
+
+    const patentsWithFav = patentsWithMapping.map((p) => ({
+      ...p,
+      isFavorite: p.applicationNumber
+        ? favList.includes(p.applicationNumber)
+        : false,
+    }));
+
     return {
       total: r.total,
       page: r.pageNo,
       totalPages: Math.ceil(r.total / r.numOfRows),
-      patents: patentsWithMapping,
+      patents: patentsWithFav,
     };
   },
 
-  async getDetail(applicationNumber: string): Promise<PatentItemRaw> {
-    const params = {
+  async getDetail(applicationNumber: string, userId?: number): Promise<any> {
+    const params: SearchParams = {
       applicationNumber,
-      ServiceKey: KIPRIS_KEY,
+      ServiceKey: KIPRIS_KEY, // ✔
     };
 
     const r = await searchPatents(params);
@@ -146,6 +176,17 @@ export const PatentService = {
     }
 
     const [item] = await addIpcMapping(items);
-    return item;
+
+    // 🔥 favorite 여부 포함
+    let isFavorite = false;
+    if (userId) {
+      const favList = await FavoriteRepository.getUserFavoriteNumbers(userId);
+      isFavorite = favList.includes(applicationNumber);
+    }
+
+    return {
+      ...item,
+      isFavorite,
+    };
   },
 };
