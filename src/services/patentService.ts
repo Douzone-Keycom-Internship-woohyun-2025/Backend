@@ -91,14 +91,15 @@ export const PatentService = {
     const patentsWithMapping = await addIpcMapping(r.items);
 
     // 🔥 즐겨찾기 여부 비교
-    let favList: string[] = [];
-    if (userId)
-      favList = await FavoriteRepository.getUserFavoriteNumbers(userId);
+    const favList = userId
+      ? await FavoriteRepository.getUserFavoriteNumbers(userId)
+      : [];
+    const favSet = new Set(favList);
 
     const patentsWithFav = patentsWithMapping.map((p) => ({
       ...p,
       isFavorite: p.applicationNumber
-        ? favList.includes(p.applicationNumber)
+        ? favSet.has(p.applicationNumber)
         : false,
     }));
 
