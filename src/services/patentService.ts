@@ -2,8 +2,9 @@ import axios from "axios";
 import xml2js from "xml2js";
 import { KIPRIS_KEY, KIPRIS_BASE } from "../config/env";
 import { PatentListResult, PatentItemRaw } from "../types/kipris";
-import { DEFAULT_ROWS_PER_PAGE } from "../constants/pagination";
+import { DEFAULT_ROWS_PER_PAGE } from "../controllers/constants/pagination";
 import { NotFoundError } from "../errors/notFoundError";
+import { IpcSubclassDictionary } from "../repositories/ipcSubclassDictionary";
 
 const KIPRIS_ADVANCED_SEARCH_URL = `${KIPRIS_BASE}/kipo-api/kipi/patUtiModInfoSearchSevice/getAdvancedSearch`;
 
@@ -27,40 +28,14 @@ const statusMap: Record<string, string> = {
   "": "",
 };
 
-interface PatentSearchParmas {
-  applicant?: string;
-  startDate: string;
-  endDate: string;
-  page?: number;
-}
-
-interface PatentAdvancedSearchParams {
-  applicant?: string;
-  inventionTitle?: string;
-  registerStatus?: string;
-  startDate: string;
-  endDate: string;
-  page?: number;
-}
-
-type SearchParams =
-  | PatentRequestParams
-  | { applicationNumber: string; ServiceKey: string };
-
-interface PatentRequestParams {
-  applicant?: string;
-  inventionTitle?: string;
-  lastvalue?: string;
-  patent?: boolean;
-  ServiceKey: string;
-  applicationDate: string;
-  pageNo: number;
-  numOfRows: number;
+function extractMainIpcCode(ipcNumber?: string): string | undefined {
+  if (!ipcNumber) return undefined;
+  const firstCode = ipcNumber.split("|")[0]?.trim();
+  return firstCode?.split(" ")[0];
 }
 
 async function searchPatents(params: SearchParams) {
   const res = await axios.get(KIPRIS_ADVANCED_SEARCH_URL, { params });
-
   const json = await parseXml(res.data);
   const body = json?.response?.body;
   const count = json?.response?.count;
@@ -73,14 +48,33 @@ async function searchPatents(params: SearchParams) {
   };
 }
 
+async function addIpcMapping(items: PatentItemRaw[]): Promise<PatentItemRaw[]> {
+  return items.map((item) => {
+    const mainIpcCode = extractMainIpcCode(item.ipcNumber);
+    const ipcKorName = mainIpcCode
+      ? IpcSubclassDictionary.getKorName(mainIpcCode) ?? "알 수 없음"
+      : undefined;
+    return {
+      ...item,
+      mainIpcCode,
+      ipcKorName,
+    };
+  });
+}
+
 export const PatentService = {
   async basicSearch({
     applicant,
     startDate,
     endDate,
     page = 1,
-  }: PatentSearchParmas): Promise<PatentListResult> {
-    const params: PatentRequestParams = {
+  }: {
+    applicant?: string;
+    startDate: string;
+    endDate: string;
+    page?: number;
+  }): Promise<PatentListResult> {
+    const params = {
       applicant,
       patent: true,
       ServiceKey: KIPRIS_KEY,
@@ -90,12 +84,13 @@ export const PatentService = {
     };
 
     const r = await searchPatents(params);
+    const patentsWithMapping = await addIpcMapping(r.items);
 
     return {
       total: r.total,
       page: r.pageNo,
       totalPages: Math.ceil(r.total / r.numOfRows),
-      patents: r.items,
+      patents: patentsWithMapping,
     };
   },
 
@@ -106,10 +101,16 @@ export const PatentService = {
     startDate,
     endDate,
     page = 1,
-  }: PatentAdvancedSearchParams): Promise<PatentListResult> {
+  }: {
+    applicant?: string;
+    inventionTitle?: string;
+    registerStatus?: string;
+    startDate: string;
+    endDate: string;
+    page?: number;
+  }): Promise<PatentListResult> {
     const lastvalue = statusMap[registerStatus ?? ""] ?? "";
-
-    const params: PatentRequestParams = {
+    const params = {
       applicant,
       inventionTitle,
       lastvalue,
@@ -121,12 +122,13 @@ export const PatentService = {
     };
 
     const r = await searchPatents(params);
+    const patentsWithMapping = await addIpcMapping(r.items);
 
     return {
       total: r.total,
       page: r.pageNo,
       totalPages: Math.ceil(r.total / r.numOfRows),
-      patents: r.items,
+      patents: patentsWithMapping,
     };
   },
 
@@ -143,6 +145,7 @@ export const PatentService = {
       throw new NotFoundError("특허 정보를 찾을 수 없습니다.");
     }
 
-    return items[0];
+    const [item] = await addIpcMapping(items);
+    return item;
   },
 };
