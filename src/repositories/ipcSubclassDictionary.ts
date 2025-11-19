@@ -1,6 +1,6 @@
 import { pool } from "../config/db";
 
-export class IpcRepository {
+export class IpcSubclassDictionary {
   private static cache: Record<string, string> = {};
 
   static async loadCache() {
