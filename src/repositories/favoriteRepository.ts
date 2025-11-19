@@ -71,4 +71,14 @@ export const FavoriteRepository = {
     );
     return (result.rowCount ?? 0) > 0;
   },
+
+  // 🔥 추가: 유저의 즐겨찾기 applicationNumber 목록 가져오기
+  async getUserFavoriteNumbers(userId: number): Promise<string[]> {
+    const result = await pool.query(
+      `SELECT application_number FROM favorite_patents WHERE user_tblkey = $1`,
+      [userId]
+    );
+
+    return result.rows.map((r) => r.application_number);
+  },
 };
