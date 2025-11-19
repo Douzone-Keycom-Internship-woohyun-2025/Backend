@@ -98,7 +98,7 @@ export const PatentService = {
     const params: SearchParams = {
       applicant,
       patent: true,
-      ServiceKey: KIPRIS_KEY, // ✔ SearchParams 타입에 맞춤
+      ServiceKey: KIPRIS_KEY,
       applicationDate: `${startDate}~${endDate}`,
       pageNo: page,
       numOfRows: DEFAULT_ROWS_PER_PAGE,
