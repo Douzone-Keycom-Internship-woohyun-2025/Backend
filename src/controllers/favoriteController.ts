@@ -30,6 +30,7 @@ export const createFavorite = async (
         registerDate: favorite.register_date,
         registerStatus: favorite.register_status,
         drawingUrl: favorite.drawing_url,
+        mainIpcCode: favorite.main_ipc_code,
         createdAt: favorite.adddate,
       },
     });
@@ -66,6 +67,7 @@ export const listFavorites = async (
           registerDate: f.register_date,
           registerStatus: f.register_status,
           drawingUrl: f.drawing_url,
+          mainIpcCode: f.main_ipc_code,
           createdAt: f.adddate,
         })),
       },
@@ -102,6 +104,7 @@ export const getFavorite = async (
         registerDate: favorite.register_date,
         registerStatus: favorite.register_status,
         drawingUrl: favorite.drawing_url,
+        mainIpcCode: favorite.main_ipc_code,
         createdAt: favorite.adddate,
       },
     });

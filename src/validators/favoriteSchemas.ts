@@ -28,4 +28,6 @@ export const createFavoriteSchema = z.object({
   registerDate: z.string().optional(),
   registerStatus: z.string().optional(),
   drawingUrl: z.string().optional(),
+  ipcNumber: z.string().optional(),
+  mainIpcCode: z.string().optional(),
 });

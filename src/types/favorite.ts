@@ -14,6 +14,8 @@ export interface FavoriteRow {
   drawing_url: string | null;
   adddate: Date;
   open_number: string | null;
+  ipc_number: string | null;
+  main_ipc_code: string | null;
 }
 
 export interface FavoritePayload {
@@ -29,4 +31,6 @@ export interface FavoritePayload {
   registerNumber?: string | null;
   registerStatus?: string;
   drawingUrl?: string;
+  ipcNumber?: string | null;
+  mainIpcCode?: string | null;
 }
