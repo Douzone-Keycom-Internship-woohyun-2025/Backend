@@ -10,7 +10,10 @@ export const basicSearch = async (
   try {
     const { applicant, startDate, endDate, page = 1 } = req.body;
 
+    const userId = req.user?.userId;
+
     const data = await PatentService.basicSearch({
+      userId,
       applicant,
       startDate,
       endDate,
@@ -39,10 +42,13 @@ export const advancedSearch = async (
       registerStatus,
       startDate,
       endDate,
-      page,
+      page = 1,
     } = req.body;
 
+    const userId = req.user?.userId;
+
     const data = await PatentService.advancedSearch({
+      userId,
       applicant,
       inventionTitle,
       registerStatus,
@@ -68,7 +74,9 @@ export const getPatentDetail = async (
 ) => {
   try {
     const applicationNumber = req.params.applicationNumber;
-    const data = await PatentService.getDetail(applicationNumber);
+    const userId = req.user?.userId;
+
+    const data = await PatentService.getDetail(applicationNumber, userId);
 
     return res.json({
       status: "success",
