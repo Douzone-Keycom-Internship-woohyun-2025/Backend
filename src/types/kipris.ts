@@ -27,7 +27,7 @@ export interface SearchParams {
   inventionTitle?: string;
   lastvalue?: string;
   patent?: boolean;
-  ServiceKey: string;
+  serviceKey: string;
   applicationDate?: string;
   applicationNumber?: string;
   pageNo?: number;
