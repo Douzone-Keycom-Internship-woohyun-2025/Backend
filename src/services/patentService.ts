@@ -1,7 +1,7 @@
 import axios from "axios";
 import xml2js from "xml2js";
 import { KIPRIS_KEY, KIPRIS_BASE } from "../config/env";
-import { PatentListResult, PatentItemRaw } from "../types/kipris";
+import { PatentListResult, PatentItemRaw, SearchParams } from "../types/kipris";
 import { DEFAULT_ROWS_PER_PAGE } from "../controllers/constants/pagination";
 import { NotFoundError } from "../errors/notFoundError";
 import { IpcSubclassDictionary } from "../repositories/ipcSubclassDictionary";
