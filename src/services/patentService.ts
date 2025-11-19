@@ -34,7 +34,7 @@ function extractMainIpcCode(ipcNumber?: string): string | undefined {
   return firstCode?.split(" ")[0];
 }
 
-async function searchPatents(params: any) {
+async function searchPatents(params: SearchParams) {
   const res = await axios.get(KIPRIS_ADVANCED_SEARCH_URL, { params });
   const json = await parseXml(res.data);
   const body = json?.response?.body;
