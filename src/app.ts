@@ -9,7 +9,21 @@ import favoriteRoutes from "./routes/favoriteRoutes";
 import { errorHandler } from "./middlewares/errorHandler";
 
 const app = express();
-app.use(cors());
+
+const allowedOrigins = [
+  process.env.FRONTEND_URL_DEV,
+  process.env.FRONTEND_URL_PROD,
+  process.env.FRONTEND_URL_VERCEL,
+  process.env.FRONTEND_URL_STAGING,
+].filter(Boolean) as string[];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 app.get("/health", async (_req, res) => {
