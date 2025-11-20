@@ -35,4 +35,5 @@ export interface SearchParams {
   applicationNumber?: string;
   pageNo?: number;
   numOfRows?: number;
+  descSort?: boolean;
 }

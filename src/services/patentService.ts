@@ -10,8 +10,7 @@ import { FavoriteRepository } from "../repositories/favoriteRepository";
 const KIPRIS_ADVANCED_SEARCH_URL = `${KIPRIS_BASE}/kipo-api/kipi/patUtiModInfoSearchSevice/getAdvancedSearch`;
 
 function ensureArray(v: any) {
-  if (!v) return [];
-  return Array.isArray(v) ? v : [v];
+  return !v ? [] : Array.isArray(v) ? v : [v];
 }
 
 async function parseXml(xml: string) {
@@ -56,12 +55,7 @@ async function addIpcMapping(items: PatentItemRaw[]): Promise<PatentItemRaw[]> {
     const ipcKorName = mainIpcCode
       ? IpcSubclassDictionary.getKorName(mainIpcCode) ?? "알 수 없음"
       : undefined;
-
-    return {
-      ...item,
-      mainIpcCode,
-      ipcKorName,
-    };
+    return { ...item, mainIpcCode, ipcKorName };
   });
 }
 
@@ -96,18 +90,21 @@ export const PatentService = {
     startDate,
     endDate,
     page = 1,
+    sort = "desc",
   }: {
     userId?: number;
     applicant?: string;
     startDate?: string;
     endDate?: string;
     page?: number;
+    sort?: "asc" | "desc";
   }): Promise<PatentListResult> {
     const params: SearchParams = {
       patent: true,
       ServiceKey: KIPRIS_KEY,
       pageNo: page,
       numOfRows: DEFAULT_ROWS_PER_PAGE,
+      descSort: sort === "desc",
     };
 
     if (applicant) params.applicant = applicant;
@@ -136,6 +133,7 @@ export const PatentService = {
     startDate,
     endDate,
     page = 1,
+    sort = "desc",
   }: {
     userId?: number;
     applicant?: string;
@@ -144,12 +142,14 @@ export const PatentService = {
     startDate?: string;
     endDate?: string;
     page?: number;
+    sort?: "asc" | "desc";
   }): Promise<PatentListResult> {
     const params: SearchParams = {
       patent: true,
       ServiceKey: KIPRIS_KEY,
       pageNo: page,
       numOfRows: DEFAULT_ROWS_PER_PAGE,
+      descSort: sort === "desc",
     };
 
     if (applicant) params.applicant = applicant;
@@ -174,10 +174,7 @@ export const PatentService = {
     };
   },
 
-  async getDetail(
-    applicationNumber: string,
-    userId?: number
-  ): Promise<PatentItemRaw> {
+  async getDetail(applicationNumber: string, userId?: number) {
     const params: SearchParams = {
       applicationNumber,
       ServiceKey: KIPRIS_KEY,

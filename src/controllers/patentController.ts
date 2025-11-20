@@ -8,7 +8,7 @@ export const basicSearch = async (
   next: NextFunction
 ) => {
   try {
-    const { applicant, startDate, endDate, page = 1 } = req.body;
+    const { applicant, startDate, endDate, page = 1, sort = "desc" } = req.body;
 
     const userId = req.user?.userId;
 
@@ -18,6 +18,7 @@ export const basicSearch = async (
       startDate,
       endDate,
       page,
+      sort,
     });
 
     return res.json({
@@ -43,6 +44,7 @@ export const advancedSearch = async (
       startDate,
       endDate,
       page = 1,
+      sort = "desc",
     } = req.body;
 
     const userId = req.user?.userId;
@@ -55,6 +57,7 @@ export const advancedSearch = async (
       startDate,
       endDate,
       page,
+      sort,
     });
 
     return res.json({
