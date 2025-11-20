@@ -38,6 +38,7 @@ function extractMainIpcCode(ipcNumber?: string): string | undefined {
 async function searchPatents(params: SearchParams) {
   const res = await axios.get(KIPRIS_ADVANCED_SEARCH_URL, { params });
   const json = await parseXml(res.data);
+
   const body = json?.response?.body;
   const count = json?.response?.count;
 
@@ -81,6 +82,13 @@ async function attachFavoriteInfo(
   }));
 }
 
+function buildDateRange(startDate?: string, endDate?: string) {
+  if (startDate && endDate) return `${startDate}~${endDate}`;
+  if (startDate) return `${startDate}~`;
+  if (endDate) return `~${endDate}`;
+  return undefined;
+}
+
 export const PatentService = {
   async basicSearch({
     userId,
@@ -91,18 +99,21 @@ export const PatentService = {
   }: {
     userId?: number;
     applicant?: string;
-    startDate: string;
-    endDate: string;
+    startDate?: string;
+    endDate?: string;
     page?: number;
   }): Promise<PatentListResult> {
     const params: SearchParams = {
-      applicant,
       patent: true,
       ServiceKey: KIPRIS_KEY,
-      applicationDate: `${startDate}~${endDate}`,
       pageNo: page,
       numOfRows: DEFAULT_ROWS_PER_PAGE,
     };
+
+    if (applicant) params.applicant = applicant;
+
+    const dateRange = buildDateRange(startDate, endDate);
+    if (dateRange) params.applicationDate = dateRange;
 
     const r = await searchPatents(params);
 
@@ -130,22 +141,25 @@ export const PatentService = {
     applicant?: string;
     inventionTitle?: string;
     registerStatus?: string;
-    startDate: string;
-    endDate: string;
+    startDate?: string;
+    endDate?: string;
     page?: number;
   }): Promise<PatentListResult> {
-    const lastvalue = statusMap[registerStatus ?? ""] ?? "";
-
     const params: SearchParams = {
-      applicant,
-      inventionTitle,
-      lastvalue,
       patent: true,
       ServiceKey: KIPRIS_KEY,
-      applicationDate: `${startDate}~${endDate}`,
       pageNo: page,
       numOfRows: DEFAULT_ROWS_PER_PAGE,
     };
+
+    if (applicant) params.applicant = applicant;
+    if (inventionTitle) params.inventionTitle = inventionTitle;
+
+    const lastvalue = statusMap[registerStatus ?? ""];
+    if (lastvalue) params.lastvalue = lastvalue;
+
+    const dateRange = buildDateRange(startDate, endDate);
+    if (dateRange) params.applicationDate = dateRange;
 
     const r = await searchPatents(params);
 
@@ -160,7 +174,10 @@ export const PatentService = {
     };
   },
 
-  async getDetail(applicationNumber: string, userId?: number): Promise<PatentItemRaw> {
+  async getDetail(
+    applicationNumber: string,
+    userId?: number
+  ): Promise<PatentItemRaw> {
     const params: SearchParams = {
       applicationNumber,
       ServiceKey: KIPRIS_KEY,
@@ -174,7 +191,6 @@ export const PatentService = {
 
     const [item] = await addIpcMapping(r.items);
 
-    // ✔ 단일 조회 최적화
     let isFavorite = false;
     if (userId) {
       const fav = await FavoriteRepository.findByApplicationNumber(
