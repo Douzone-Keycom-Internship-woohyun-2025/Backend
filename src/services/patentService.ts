@@ -104,6 +104,7 @@ export const PatentService = {
       ServiceKey: KIPRIS_KEY,
       pageNo: page,
       numOfRows: DEFAULT_ROWS_PER_PAGE,
+      sortSpec: "AD",
       descSort: sort === "desc",
     };
 
@@ -149,6 +150,7 @@ export const PatentService = {
       ServiceKey: KIPRIS_KEY,
       pageNo: page,
       numOfRows: DEFAULT_ROWS_PER_PAGE,
+      sortSpec: "AD",
       descSort: sort === "desc",
     };
 
