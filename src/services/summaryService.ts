@@ -4,12 +4,6 @@ import xml2js from "xml2js";
 import { KIPRIS_KEY } from "../config/env";
 import { KIPRIS_BASE } from "../config/env";
 
-if (!KIPRIS_KEY || !KIPRIS_BASE) {
-  throw new Error(
-    "KIPRIS_API_KEY or KIPRIS_BASE_URL 환경변수 설정이 안되어있습니다."
-  );
-}
-
 export interface PatentItem {
   applicantName: string;
   applicationDate: string;
@@ -48,9 +42,6 @@ function getIpcMainCode(ipc: string): string | null {
   return first.replace(/\s+/g, "").slice(0, 4);
 }
 
-// ==========================================================
-// 📌 fetchPage(): KIPRIS 한 페이지 조회 + 디버그 로그
-// ==========================================================
 async function fetchPage(
   applicant: string,
   start: string,
@@ -69,32 +60,18 @@ async function fetchPage(
     pageNo: page,
   };
 
-  console.log("🌍 [Render] fetchPage 호출");
-  console.log("👉 applicant:", applicant);
-  console.log("👉 start:", start);
-  console.log("👉 end:", end);
-  console.log("👉 page:", page);
-
   let res;
   try {
     res = await axios.get(url, { params });
   } catch (err: any) {
-    console.log("❌ KIPRIS 요청 실패");
-    console.log("status:", err.response?.status);
-    console.log("data:", err.response?.data?.slice?.(0, 300));
     throw err;
   }
-
-  console.log("✅ KIPRIS HTTP STATUS:", res.status);
-  console.log("📄 XML 응답 일부:", res.data?.slice?.(0, 300));
 
   const xml = res.data;
 
   const json = await xml2js.parseStringPromise(xml, { explicitArray: false });
   const body = json?.response?.body;
   const count = json?.response?.count;
-
-  console.log("📦 totalCount:", count?.totalCount);
 
   return {
     items: ensureArray(body?.items?.item),
@@ -104,22 +81,12 @@ async function fetchPage(
   };
 }
 
-// ==========================================================
-// 📌 fetchAll(): 전체 페이지 병렬 조회 + 로그
-// ==========================================================
 async function fetchAll(
   applicant: string,
   start: string,
   end: string
 ): Promise<PatentItem[]> {
-  console.log("📥 fetchAll 요청:");
-  console.log("👉 applicant:", applicant);
-  console.log("👉 start:", start);
-  console.log("👉 end:", end);
-
   const first = await fetchPage(applicant, start, end, 1, 100);
-
-  console.log("📦 첫 페이지 totalCount:", first.totalCount);
 
   const total = first.totalCount;
   const pageSize = 100;
@@ -152,14 +119,9 @@ async function fetchAll(
     await processBatch(batch);
   }
 
-  console.log("📊 fetchAll 최종 items 개수:", items.length);
-
   return items;
 }
 
-// ==========================================================
-// 📌 SummaryService.analyze(): 전체 분석 + 로그
-// ==========================================================
 export const SummaryService = {
   async analyze({
     applicant,
@@ -170,14 +132,7 @@ export const SummaryService = {
     startDate: string;
     endDate: string;
   }): Promise<PatentStatResult> {
-    console.log("🚀 [analyze] 시작");
-    console.log("🔎 applicant:", applicant);
-    console.log("🔎 startDate:", startDate);
-    console.log("🔎 endDate:", endDate);
-
     const items = await fetchAll(applicant, startDate, endDate);
-
-    console.log("📊 분석 대상 특허 개수:", items.length);
 
     const total = items.length;
 
@@ -229,8 +184,6 @@ export const SummaryService = {
         ipcMain: getIpcMainCode(p.ipcNumber),
         status: p.registerStatus,
       }));
-
-    console.log("🎯 summaryService analyze 완료");
 
     return {
       totalCount: total,
