@@ -5,6 +5,7 @@ import { KIPRIS_KEY } from "../config/env";
 import { KIPRIS_BASE } from "../config/env";
 
 export interface PatentItem {
+  applicationNumber: string;
   applicantName: string;
   applicationDate: string;
   ipcNumber: string;
@@ -20,6 +21,7 @@ export interface PatentStatResult {
   topIPC: Array<{ code: string; count: number }>;
   avgMonthlyCount: number;
   recentPatents: Array<{
+    applicationNumber: string;
     title: string;
     date: string;
     ipcMain: string | null;
@@ -179,6 +181,7 @@ export const SummaryService = {
       .sort((a, b) => Number(b.applicationDate) - Number(a.applicationDate))
       .slice(0, 3)
       .map((p: PatentItem) => ({
+        applicationNumber: p.applicationNumber,
         title: p.inventionTitle || "(제목 없음)",
         date: p.applicationDate,
         ipcMain: getIpcMainCode(p.ipcNumber),
