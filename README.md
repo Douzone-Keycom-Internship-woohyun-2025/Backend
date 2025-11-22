@@ -1,282 +1,259 @@
+<p align="center">
+<img width="200" height="200" alt="TechLens로고" src="https://github.com/user-attachments/assets/3e8b41ac-733c-499a-b49b-bf32eee18ad8" />
+</p>
+
 # TechLens Backend
 
-특허 검색 및 분석 플랫폼의 **백엔드** 저장소입니다.  
-Node.js + Express + PostgreSQL 기반으로 인증, 프리셋, 특허 검색, 분석, 관심특허 기능을 제공합니다.
+TechLens Backend는 특허 검색·분석 플랫폼 **TechLens**의 서버 애플리케이션입니다.  
+Node.js + Express + PostgreSQL 기반으로 **인증, 특허 검색(KIPRIS 연동), 분석 요약, 프리셋 관리, 관심특허 관리** 기능을 제공합니다.
 
 ---
 
-## 📋 프로젝트 개요
+# 1. Project Overview
 
-### 프로젝트 정보
-- **프로젝트명**: TechLens (특허 검색 및 분석 플랫폼)
-- **소속**: 더존 ICT Group × 강원대학교 컴퓨터공학과 심우현
-- **역할**: 백엔드 API 설계/구현, DB 설계, 배포 자동화
-
-### 저장소/브랜치
-- **Backend 저장소**: https://github.com/Douzone-Keycom-Internship-woohyun-2025/Backend/tree/develop  
-- **브랜치 전략**: `main`(프로덕션), `develop`(개발 통합), `feat/*`(기능)
-
-### 접속 URL (Staging)
-- **Render Backend (develop)**: https://techlens-backend-develop.onrender.com/
-
-### API/DB 문서
-- **API 명세서 (V1.1)**  
-  https://github.com/Douzone-Keycom-Internship-woohyun-2025/Docs/blob/main/specs/TechLens_API%EB%AA%85%EC%84%B8%EC%84%9CV1.1.md
-- **DB 정의서 (V1.1)**  
-  https://github.com/Douzone-Keycom-Internship-woohyun-2025/Docs/blob/main/specs/TechLens_DB%EC%A0%95%EC%9D%98%EC%84%9CV1.1.md
-
----
-
-## 🧱 아키텍처
+## 1.1 시스템 구성도
 
 ```
-TechLens 프로젝트
-├── techlens-frontend (별도 레포)         ← React + TS, Vercel
-└── techlens-backend  (이 저장소)          ← Node + Express, Render
-    ├── PostgreSQL 14+ (Render)
-    └── KIPRIS Open API 연동 예정
+TechLens Platform
+├── techlens-frontend    (React + TS, Vercel)
+└── techlens-backend     (Node + Express, Render)
+    ├── PostgreSQL (Render Managed DB)
+    ├── KIPRIS Open API (xml2js)
+    ├── JWT Authentication (Access + Refresh)
+    └── REST API Server
 ```
 
-**API Base URL**  
-(로컬) `http://localhost:4000`  
-(Render) `https://techlens-backend-develop.onrender.com`
+## 1.2 프로젝트 역할 (Project Roles)
+
+| 이름 | 소속 / 직책 | 역할 |
+|------|-------------|-------|
+| **심우현** | 강원대학교 / 인턴 | 백엔드 전체 설계·구현, DB 스키마 모델링, API 설계, KIPRIS 연동, 배포 |
+| **박효민** | 더존 키컴 선임연구원 | 기술 멘토링, 아키텍처 검토, 전체 개발 방향성 지도 |
+| **양태인** | 더존 키컴 주임연구원 | 개발 방향성 조언 |
 
 ---
 
-## 🛠 기술 스택
+# 2. Features
 
-| 항목 | 기술 |
-|---|---|
-| 런타임 | Node.js 20+ |
-| 웹 프레임워크 | Express |
-| DB | PostgreSQL 14+ |
-| 인증 | JWT (Bearer), RefreshToken |
-| 검증 | Zod |
-| 배포 | Render |
-| 로깅 | console (필요 시 winston 확장) |
+TechLens Backend는 다음의 주요 기능을 지원합니다.
+
+### ✔ 인증(Auth)
+- AccessToken + RefreshToken 기반 JWT 인증
+- 로그인 / 회원가입 / 로그아웃 / 토큰 재발급
+- Refresh Token DB 저장 방식으로 안전성 강화
+
+### ✔ 특허 검색(Patent Search)
+- KIPRIS Open API 연동
+- Basic / Advanced 검색 지원
+- XML → JSON 가공(xml2js)
+- IPC 코드 자동 파싱 및 정규화
+
+### ✔ 분석 요약(Summary Analysis)
+- 회사명 + 기간 조건 기반 전체 특허 분석
+- IPC 분포, 월별 출원 추이, 상태 비율, 최근 특허 등 통계 생성
+
+### ✔ 프리셋(Preset)
+- 자주 사용하는 조회 조건 관리
+- 생성 / 수정 / 삭제 / 상세 조회
+- Summary/Patent Search와 연동
+
+### ✔ 관심특허(Favorites)
+- applicationNumber 기반 저장/조회/삭제
+- 중복 방지 로직
+- Patent Detail과 연동
 
 ---
 
-## 📁 프로젝트 구조
+# 3. Tech Stack
+
+| Category | Technology |
+|----------|------------|
+| Runtime | Node.js 20+ |
+| Framework | Express |
+| Database | PostgreSQL 14+ |
+| Authentication | JWT + Refresh Token |
+| Validation | Zod |
+| External API | KIPRIS Open API, xml2js |
+| Deployment | Render |
+| Logging | console |
+
+---
+
+# 4. Directory Structure  
 
 ```
-. (Project Root)
-├── src/
-│   ├── app.ts                 # Express 앱 설정 (CORS/JSON/헬스체크)
-│   ├── server.ts              # 서버 실행 (포트 바인딩)
-│   ├── config/
-│   │   ├── db.ts              # PostgreSQL pool 설정
-│   │   └── env.ts             # 환경 변수 (Zod)
-│   ├── controllers/
-│   │   ├── authController.ts
-│   │   ├── presetController.ts
-│   │   └── summaryController.ts
-│   ├── errors/
-│   │   └── notFoundError.ts   # 커스텀 404 에러
-│   ├── middlewares/
-│   │   ├── requireAuth.ts     # JWT 인증 미들웨어
-│   │   └── validate.ts        # Zod 기반 요청 바디 검증
-│   ├── models/
-│   │   └── .gitkeep
-│   ├── repositories/
-│   │   ├── authRepository.ts
-│   │   ├── presetRepository.ts
-│   │   └── refreshTokenRepository.ts
-│   ├── routes/
-│   │   ├── authRoutes.ts
-│   │   ├── presetRoutes.ts
-│   │   └── summaryRoutes.ts
-│   ├── services/
-│   │   ├── authService.ts
-│   │   ├── presetService.ts
-│   │   └── summaryService.ts
-│   ├── types/
-│   │   ├── auth.ts
-│   │   └── preset.ts
-│   └── validators/
-│       └── presetSchemas.ts   # Zod 스키마 (create/update)
-└── tests/
-    └── .gitkeep
+src/
+├── config/
+│   ├── db.ts
+│   └── env.ts
+│
+├── controllers/
+│   ├── constants/
+│   │   └── pagination.ts
+│   ├── authController.ts
+│   ├── favoriteController.ts
+│   ├── patentController.ts
+│   ├── presetController.ts
+│   └── summaryController.ts
+│
+├── errors/
+│   ├── badRequestError.ts
+│   ├── notFoundError.ts
+│   └── unauthorizedError.ts
+│
+├── middlewares/
+│   ├── errorHandler.ts
+│   ├── requireAuth.ts
+│   └── validate.ts
+│
+├── models/
+│   └── .gitkeep
+│
+├── repositories/
+│   ├── authRepository.ts
+│   ├── favoriteRepository.ts
+│   ├── ipcSubclassDictionary.ts
+│   ├── patentIpcSubclassRepository.ts
+│   ├── presetRepository.ts
+│   └── refreshTokenRepository.ts
+│
+├── routes/
+│   ├── authRoutes.ts
+│   ├── favoriteRoutes.ts
+│   ├── patentRoutes.ts
+│   ├── presetRoutes.ts
+│   └── summaryRoutes.ts
+│
+├── services/
+│   ├── authService.ts
+│   ├── favoriteService.ts
+│   ├── patentService.ts
+│   ├── presetService.ts
+│   └── summaryService.ts
+│
+├── types/
+│   ├── auth.ts
+│   ├── favorite.ts
+│   ├── kipris.ts
+│   └── preset.ts
+│
+├── utils/
+│   └── ipc.ts
+│
+├── validators/
+│   ├── favoriteSchemas.ts
+│   └── presetSchemas.ts
+│
+├── app.ts
+└── server.ts
 ```
 
 ---
 
-## 🔐 인증
+# 5. API Reference
 
-- **방식**: AccessToken + RefreshToken 기반 JWT 인증
-- **발급**
-  - `POST /users/signup` 성공 시: `accessToken`, `refreshToken` 동시 발급
-  - `POST /users/login` 성공 시: `accessToken`, `refreshToken` 동시 발급
-- **사용 (인증이 필요한 모든 API)**
-  - 요청 헤더에 **AccessToken**을 Bearer 방식으로 포함
-  - 예시:
-    ```http
-    Authorization: Bearer <ACCESS_TOKEN>
-    ```
-- **토큰 재발급**
-  - `POST /users/refresh`
-  - 요청 바디에 **RefreshToken** 전달  
-    ```json
-    { "refreshToken": "<REFRESH_TOKEN>" }
-    ```
-  - 응답으로 **새로운 AccessToken** 발급
+### Users (Auth)
+- POST /users/signup  
+- POST /users/login  
+- POST /users/logout  
+- POST /users/refresh  
 
-- **로그아웃**
-  - `POST /users/logout`
-  - 요청 바디에 **RefreshToken** 전달  
-    ```json
-    { "refreshToken": "<REFRESH_TOKEN>" }
-    ```
-  - 서버 DB에서 해당 RefreshToken을 삭제  
-  - 이후에는 **AccessToken 재발급 불가능**, 기존 AccessToken은 만료 시점까지만 유효
+### Patents
+- POST /patents/search/basic  
+- POST /patents/search/advanced  
+- GET /patents/:applicationNumber  
 
----
+### Summary
+- GET /summary  
 
-## 🔗 주요 엔드포인트 요약
+### Presets
+- POST /presets  
+- GET /presets  
+- GET /presets/:presetId  
+- PATCH /presets/:presetId  
+- DELETE /presets/:presetId  
 
-> 상세한 파라미터/응답 예시는 **API 명세서(V1.1)** 문서를 참고하세요.
+### Favorites
+- GET /favorites  
+- POST /favorites  
+- DELETE /favorites/:applicationNumber  
 
-### Users (인증)
-- `POST /users/signup` – 회원가입
-- `POST /users/login` – 로그인(JWT 발급)
-- `POST /users/logout` – 로그아웃
-
-### Presets (프리셋)
-- `POST /presets` – 프리셋 생성 (JWT 필요)
-- `GET /presets` – 프리셋 목록 (skip/limit, 요약 응답. description 제외)
-- `GET /presets/:presetId` – 프리셋 단건 조회 (상세, description 포함)
-- `PATCH /presets/:presetId` – 프리셋 수정 (부분 업데이트)
-- `DELETE /presets/:presetId` – 프리셋 삭제 (204 No Content)
-
-### Patents / Analysis / Favorites
-- API 명세서에 설계 기재. 구현 순차 진행.
-
-### Health Check
-- `GET /health` – DB 연결 확인
-  ```json
-  { "status": "성공", "db": "연결" }
-  ```
+API 명세서:  
+https://github.com/Douzone-Keycom-Internship-woohyun-2025/Docs/blob/main/specs/TechLens_API_specificationsV1.1.md
 
 ---
 
-## ⚙️ 로컬 실행 ( 현재 진행 불가능 )
+# 6. Development Guide
 
-### 1) 환경 변수
-프로젝트 루트에 `.env` 생성:
+## Commit Convention
 ```
-PORT=4000
-DATABASE_URL=postgresql://<user>:<pass>@<host>:<port>/<db>
-JWT_SECRET=<랜덤-32바이트-이상>
-```
-
-### 2) 설치 & 실행
-```bash
-npm cl
-npm run dev   # ts-node-dev 등 개발 서버
-# 또는
-npm run build && npm start
-```
-
-### 3) CORS
-- 현재 `app.ts`에서 `cors()` 허용. 필요 시 `origin` 화이트리스트 세팅 권장.
-
----
-
-## 🧰 개발 가이드
-
-### 데이터베이스
-- **PostgreSQL 14+**
-- 주요 테이블: `users`, `presets`, `favorite_patents`, `ipc_subclass_map`, `patent_ipc_subclass_map`
-- FK: `users → presets`, `favorite_patents → patent_ipc_subclass_map → ipc_subclass_map`
-- 날짜: `TIMESTAMP DEFAULT NOW()` (ISO 8601)
-
-### 요청 검증
-- **Zod**로 요청 바디 스키마 검증
-  - `validators/presetSchemas.ts`
-  - `middlewares/validate.ts` 미들웨어로 라우터에서 적용
-
-### 에러 처리
-- 커스텀 에러: `NotFoundError` (404)
-- 컨트롤러에서 `instanceof NotFoundError`로 분기
-- 기본 에러는 500 `{ status:"error", message }`
-
-### 페이징
-- `skip`/`limit`(최대 100) 가드
-- `COUNT(*) OVER()` 으로 total 동시 조회 (빈 페이지일 때만 count 보정)
-
----
-
-## 🚀 배포
-
-- **플랫폼**: Render
-- **브랜치**: `develop` → Staging 자동 배포
-- **헬스체크**: `GET /health`
-- **환경 변수**: Render 환경 탭에 `.env`와 동일 키 등록
-
----
-
-## 🤝 컨벤션
-
-### 커밋
-```
-feat:     새로운 기능
-fix:      버그 수정
-docs:     문서 변경
+feat: 기능 추가
+fix: 버그 수정
+docs: 문서 변경
 refactor: 리팩토링
-perf:     성능 개선
-test:     테스트 추가/수정
+perf: 성능 최적화
+test: 테스트 코드
 ```
 
-### 브랜치
+## Branch Strategy
 ```
-main            → 프로덕션
-└─ develop      → 개발 통합
-   ├─ feat/presets
-   ├─ feat/auth
-   ├─ feat/favorites
-   └─ feat/analysis
+main           → 배포
+└── develop    → 개발 통합
+      ├── feat/auth
+      ├── feat/presets
+      ├── feat/patents
+      ├── feat/favorites
+      └── feat/analysis
 ```
 
 ---
 
-## ✅ 구현 현황
+# 7. Environment Variables
 
-구현 현황 체크리스트
-전체 엔드포인트: 17개
-
-구현 완료: 13개
-미구현: 4개
-
-완성도: 70.8%
+### `.env`
 ```
-| 엔드포인트 | 상태 || 엔드포인트 | 상태 |
-|---|---|
-| Users: POST /users/signup | ✅ 완료 |
-| Users: POST /users/login | ✅ 완료 |
-| Users: POST /users/logout | ✅ 완료 |
-| Users: POST /users/refresh | ✅ 완료 |
-| Presets: POST /presets | ✅ 완료 |
-| Presets: GET /presets | ✅ 완료 |
-| Presets: GET /presets/:presetId | ✅ 완료 |
-| Presets: PATCH /presets/:presetId | ✅ 완료 |
-| Presets: DELETE /presets/:presetId | ✅ 완료 |
-| Summary: GET /summary | ✅ 완료 |
-| Patents: POST /patents/search/basic | ✅ 완료 |
-| Patents: POST /patents/search/advanced | ✅ 완료 |
-| Patents: GET /patents/:applicationNumber | ✅ 완료 |
-| Favorites: GET /favorites/list | ⏳ 미구현 |
-| Favorites: POST /favorites | ⏳ 미구현 |
-| Favorites: GET /favorites/:applicationNumber | ⏳ 미구현 |
-| Favorites: DELETE /favorites/:applicationNumber | ⏳ 미구현 |
-```
----
+DATABASE_URL=
+PORT=4000
+JWT_SECRET=
+KIPRIS_API_KEY=
+KIPRIS_BASE_URL=
+FRONTEND_URL_DEV=
+FRONTEND_URL_PROD=
+FRONTEND_URL_VERCEL=
+FRONTEND_URL_STAGING=
 
-## 📌 비고
-- 프론트엔드 저장소와 API 스펙/DB 정의는 상단 링크 참고.
-- 보안상 `JWT_SECRET`은 최소 32바이트 랜덤 문자열을 권장합니다.
-- 프리셋 목록 응답은 요약(설명 제외), 단건 응답은 상세(설명 포함)로 설계했습니다.
+(해당 내용들이 필요합니다)
+
+```
 
 ---
 
-**마지막 업데이트**: 2025-11-13 (KST)  
-문의: 심우현 (KNU / Kicom Internship)
+# 8. Local Setup
+
+```
+npm ci
+npm run dev
+```
+
+서버 실행 URL: http://localhost:4000  
+헬스 체크: `GET /health`
+
+---
+
+# 9. Deployment (Render)
+
+- develop 브랜치 → 자동 배포
+- Render PostgreSQL 사용
+- 헬스 체크 엔드포인트 지원
+
+---
+
+# 10. 저작권(Copyright)
+
+본 프로젝트의 모든 산출물(코드, 로직, 설계, 문서 등)은  
+**심우현 개인에게 귀속됩니다.**
+
+단, 인턴십 협업 특성상  
+**KICOM(더존 키컴)은 내부 운영 목적에 한하여 사용 권한을 가집니다.**
+
+> 무단 복제, 배포, 상업적 이용을 금합니다.
