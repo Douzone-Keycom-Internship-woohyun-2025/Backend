@@ -24,8 +24,7 @@ export const getSummary = async (
       startDate = preset.start_date;
       endDate = preset.end_date;
     } else {
-
-    /** 📌 Query 모드 */
+      /** 📌 Query 모드 */
       applicant = String(req.query.applicant || "").trim();
       startDate = String(req.query.startDate || "").trim();
       endDate = String(req.query.endDate || "").trim();
@@ -39,36 +38,38 @@ export const getSummary = async (
       }
     }
 
-    /** 요약 분석 */
+    /** 📌 RAW 요약 분석 */
     const summary = await SummaryService.analyze({
       applicant,
       startDate,
       endDate,
     });
 
-    /** ================================
-     *  🚨 프론트 타입에 맞춰 변환
-     *  ================================ */
+    /** ==============================
+     🔥 프론트 SummaryDashboard 타입 매핑
+     =============================== */
 
     const responseData = {
       applicant,
+
+      /** 기간 정보(프론트가 그대로 출력함) */
       period: { startDate, endDate },
 
-      /** 📌 통계 */
+      /** 상단 통계 카드 */
       statistics: {
         totalPatents: summary.totalCount,
         monthlyAverage: summary.avgMonthlyCount,
         registrationRate: summary.statusPercent["등록"] ?? 0,
       },
 
-      /** 📌 IPC 분포 (프론트 naming 맞춤) */
+      /** IPC 파이차트 + Top5 리스트 */
       ipcDistribution: summary.topIPC.map((x) => ({
         ipcCode: x.code,
         ipcKorName: x.korName,
         count: x.count,
       })),
 
-      /** 📌 상태 분포 */
+      /** 상태 분포 (도넛차트) */
       statusDistribution: Object.entries(summary.statusCount).map(
         ([status, count]) => ({
           status,
@@ -76,10 +77,10 @@ export const getSummary = async (
         })
       ),
 
-      /** 월별 */
+      /** 월별 출원 추이 */
       monthlyTrend: summary.monthlyTrend,
 
-      /** 최근 특허 */
+      /** 최근 3개 특허 카드 */
       recentPatents: summary.recentPatents,
     };
 
