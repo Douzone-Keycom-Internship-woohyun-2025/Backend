@@ -3,6 +3,7 @@ import xml2js from "xml2js";
 
 import { KIPRIS_KEY } from "../config/env";
 import { KIPRIS_BASE } from "../config/env";
+import { IpcSubclassDictionary } from "../repositories/ipcSubclassDictionary";
 
 export interface PatentItem {
   applicationNumber: string;
@@ -18,13 +19,14 @@ export interface PatentStatResult {
   statusCount: Record<string, number>;
   statusPercent: Record<string, number>;
   monthlyTrend: Array<{ month: string; count: number }>;
-  topIPC: Array<{ code: string; count: number }>;
+  topIPC: Array<{ code: string; korName: string; count: number }>;
   avgMonthlyCount: number;
   recentPatents: Array<{
     applicationNumber: string;
     title: string;
     date: string;
     ipcMain: string | null;
+    ipcKorName: string;
     status: string;
   }>;
 }
@@ -38,6 +40,7 @@ function ensureArray(v: any): PatentItem[] {
   return Array.isArray(v) ? v : [v];
 }
 
+/** ◆ 4글자 Main IPC 코드 추출 */
 function getIpcMainCode(ipc: string): string | null {
   if (!ipc) return null;
   const first = ipc.split("|")[0].trim();
@@ -62,13 +65,7 @@ async function fetchPage(
     pageNo: page,
   };
 
-  let res;
-  try {
-    res = await axios.get(url, { params });
-  } catch (err: any) {
-    throw err;
-  }
-
+  const res = await axios.get(url, { params });
   const xml = res.data;
 
   const json = await xml2js.parseStringPromise(xml, { explicitArray: false });
@@ -135,9 +132,9 @@ export const SummaryService = {
     endDate: string;
   }): Promise<PatentStatResult> {
     const items = await fetchAll(applicant, startDate, endDate);
-
     const total = items.length;
 
+    /** --- 상태 비율 계산 --- */
     const statusCount: Record<string, number> = {};
     for (const p of items) {
       const s = p.registerStatus || "기타";
@@ -150,6 +147,7 @@ export const SummaryService = {
         total > 0 ? Number(((statusCount[k] / total) * 100).toFixed(2)) : 0;
     }
 
+    /** --- 월별 추이 --- */
     const monthlyMap: Record<string, number> = {};
     for (const p of items) {
       const y = p.applicationDate.slice(0, 4);
@@ -166,6 +164,7 @@ export const SummaryService = {
     const avgMonthlyCount =
       lastSix.reduce((acc, cur) => acc + cur.count, 0) / (lastSix.length || 1);
 
+    /** --- IPC 카테고리 Top5 --- */
     const ipcMap: Record<string, number> = {};
     for (const p of items) {
       const code4 = getIpcMainCode(p.ipcNumber);
@@ -173,20 +172,31 @@ export const SummaryService = {
     }
 
     const topIPC = Object.entries(ipcMap)
-      .map(([code, count]) => ({ code, count }))
+      .map(([code, count]) => ({
+        code,
+        korName: IpcSubclassDictionary.getKorName(code) ?? "알 수 없음",
+        count,
+      }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
+    /** --- 최근 특허 3개 --- */
     const recentPatents = [...items]
       .sort((a, b) => Number(b.applicationDate) - Number(a.applicationDate))
       .slice(0, 3)
-      .map((p: PatentItem) => ({
-        applicationNumber: p.applicationNumber,
-        title: p.inventionTitle || "(제목 없음)",
-        date: p.applicationDate,
-        ipcMain: getIpcMainCode(p.ipcNumber),
-        status: p.registerStatus,
-      }));
+      .map((p) => {
+        const code = getIpcMainCode(p.ipcNumber);
+        return {
+          applicationNumber: p.applicationNumber,
+          title: p.inventionTitle || "(제목 없음)",
+          date: p.applicationDate,
+          ipcMain: code,
+          ipcKorName: code
+            ? IpcSubclassDictionary.getKorName(code) ?? "알 수 없음"
+            : "알 수 없음",
+          status: p.registerStatus,
+        };
+      });
 
     return {
       totalCount: total,
