@@ -8,10 +8,7 @@ export const basicSearch = async (
   next: NextFunction
 ) => {
   try {
-    console.log("[BODY DEBUG] raw body:", JSON.stringify(req.body));
-    console.log("[BODY DEBUG] content-type:", req.headers["content-type"]);
     const { applicant, startDate, endDate, page = 1, sort = "desc" } = req.body;
-    console.log("[BODY DEBUG] applicant:", applicant, "hex:", Buffer.from(applicant || "").toString("hex"));
 
     const userId = req.user?.userId;
 
