@@ -35,10 +35,15 @@ function extractMainIpcCode(ipcNumber?: string): string | undefined {
 }
 
 async function searchPatents(params: SearchParams) {
-  console.log("[KIPRIS DEBUG] URL:", KIPRIS_ADVANCED_SEARCH_URL);
-  console.log("[KIPRIS DEBUG] params:", JSON.stringify(params));
-  const res = await axios.get(KIPRIS_ADVANCED_SEARCH_URL, { params });
-  console.log("[KIPRIS DEBUG] status:", res.status, "data length:", res.data?.length, "first 300:", res.data?.substring?.(0, 300));
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null) {
+      query.append(key, String(value));
+    }
+  }
+  const fullUrl = `${KIPRIS_ADVANCED_SEARCH_URL}?${query.toString()}`;
+  console.log("[KIPRIS DEBUG] fullUrl:", fullUrl);
+  const res = await axios.get(fullUrl);
   const json = await parseXml(res.data);
 
   const body = json?.response?.body;
