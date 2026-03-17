@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import { pool } from "./config/db";
 import authRoutes from "./routes/authRoutes";
 import presetRoutes from "./routes/presetRoutes";
@@ -7,8 +8,13 @@ import summaryRoutes from "./routes/summaryRoutes";
 import patentRoutes from "./routes/patentRoutes";
 import favoriteRoutes from "./routes/favoriteRoutes";
 import { errorHandler } from "./middlewares/errorHandler";
+import { apiLimiter } from "./middlewares/rateLimiter";
 
 const app = express();
+
+app.set("trust proxy", 1);
+
+app.use(helmet());
 
 const allowedOrigins = [
   process.env.FRONTEND_URL_DEV,
@@ -37,10 +43,10 @@ app.get("/health", async (_req, res) => {
 });
 
 app.use("/users", authRoutes);
-app.use("/summary", summaryRoutes);
-app.use("/patents", patentRoutes);
-app.use("/presets", presetRoutes);
-app.use("/favorites", favoriteRoutes);
+app.use("/summary", apiLimiter, summaryRoutes);
+app.use("/patents", apiLimiter, patentRoutes);
+app.use("/presets", apiLimiter, presetRoutes);
+app.use("/favorites", apiLimiter, favoriteRoutes);
 
 app.use(errorHandler);
 
