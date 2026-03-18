@@ -31,7 +31,7 @@ const statusMap: Record<string, string> = {
 function extractMainIpcCode(ipcNumber?: string): string | undefined {
   if (!ipcNumber) return undefined;
   const firstCode = ipcNumber.split("|")[0]?.trim();
-  return firstCode?.split(" ")[0];
+  return firstCode?.replace(/\s+/g, "").slice(0, 4);
 }
 
 async function searchPatents(params: SearchParams) {
