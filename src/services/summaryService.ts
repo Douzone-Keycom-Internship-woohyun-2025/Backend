@@ -68,7 +68,15 @@ async function fetchPage(
     pageNo: page,
   };
 
-  const res = await axios.get(url, { params, timeout: AXIOS_TIMEOUT });
+  let res;
+  try {
+    res = await axios.get(url, { params, timeout: AXIOS_TIMEOUT });
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      err.config = undefined; // URL에 포함된 API 키 노출 방지
+    }
+    throw err;
+  }
   const xml = res.data;
 
   const json = await xml2js.parseStringPromise(xml, { explicitArray: false });
