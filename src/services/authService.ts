@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { UserRepository } from "../repositories/authRepository";
 import { RefreshTokenRepository } from "../repositories/refreshTokenRepository";
@@ -7,6 +8,7 @@ import { BadRequestError } from "../errors/badRequestError";
 import { UnauthorizedError } from "../errors/unauthorizedError";
 
 const SALT_ROUNDS = 12;
+const REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 7일
 
 function normalizeEmail(e: string) {
   return e.trim().toLowerCase();
@@ -16,8 +18,8 @@ function generateAccessToken(payload: any) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
 }
 
-function generateRefreshToken() {
-  return jwt.sign({}, JWT_SECRET, { expiresIn: "7d" });
+function generateRefreshToken(): string {
+  return crypto.randomBytes(40).toString("hex");
 }
 
 export const AuthService = {
@@ -42,8 +44,9 @@ export const AuthService = {
     });
 
     const refreshToken = generateRefreshToken();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY);
 
+    await RefreshTokenRepository.deleteByEmail(email);
     await RefreshTokenRepository.save(refreshToken, email, expiresAt);
 
     const { password_hash: _, ...safeUser } = user;
@@ -70,8 +73,9 @@ export const AuthService = {
     });
 
     const refreshToken = generateRefreshToken();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY);
 
+    await RefreshTokenRepository.deleteByEmail(email);
     await RefreshTokenRepository.save(refreshToken, email, expiresAt);
 
     const { password_hash: _, ...safeUser } = user;
@@ -84,12 +88,25 @@ export const AuthService = {
       throw new UnauthorizedError("refresh token invalid");
     }
 
-    jwt.verify(refreshToken, JWT_SECRET);
+    // 기존 토큰 삭제 (rotation)
+    await RefreshTokenRepository.delete(refreshToken);
 
-    const email = stored.email;
-    const accessToken = generateAccessToken({ email });
+    const user = await UserRepository.findByEmail(stored.email);
+    if (!user) {
+      throw new UnauthorizedError("사용자를 찾을 수 없습니다.");
+    }
 
-    return { accessToken };
+    // 새 토큰 쌍 발급
+    const newRefreshToken = generateRefreshToken();
+    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY);
+    await RefreshTokenRepository.save(newRefreshToken, stored.email, expiresAt);
+
+    const accessToken = generateAccessToken({
+      email: stored.email,
+      userId: user.user_tblkey,
+    });
+
+    return { accessToken, refreshToken: newRefreshToken };
   },
 
   async logout(refreshToken: string) {
