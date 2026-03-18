@@ -1,8 +1,9 @@
 import { pool } from "../config/db";
+import { PoolClient } from "pg";
 import { FavoritePayload, FavoriteRow } from "../types/favorite";
 
 export const FavoriteRepository = {
-  async create(userId: number, payload: FavoritePayload): Promise<FavoriteRow> {
+  async create(userId: number, payload: FavoritePayload, client?: PoolClient): Promise<FavoriteRow> {
     const query = `
       INSERT INTO favorite_patents (
         user_tblkey,
@@ -41,7 +42,8 @@ export const FavoriteRepository = {
       payload.mainIpcCode || null,
     ];
 
-    const result = await pool.query(query, values);
+    const runner = client ?? pool;
+    const result = await runner.query(query, values);
     return result.rows[0];
   },
 
