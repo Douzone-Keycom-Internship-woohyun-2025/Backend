@@ -1,12 +1,18 @@
 import { Router } from "express";
 import { signup, login, logout, refresh } from "../controllers/authController";
 import { authLimiter } from "../middlewares/rateLimiter";
+import { validate } from "../middlewares/validate";
+import {
+  signupSchema,
+  loginSchema,
+  refreshSchema,
+} from "../validators/authSchemas";
 
 const router = Router();
 
-router.post("/signup", authLimiter, signup);
-router.post("/login", authLimiter, login);
-router.post("/refresh", authLimiter, refresh);
+router.post("/signup", authLimiter, validate(signupSchema), signup);
+router.post("/login", authLimiter, validate(loginSchema), login);
+router.post("/refresh", authLimiter, validate(refreshSchema), refresh);
 router.post("/logout", logout);
 
 export default router;
