@@ -5,6 +5,9 @@ import { KIPRIS_KEY } from "../config/env";
 import { KIPRIS_BASE } from "../config/env";
 import { IpcSubclassDictionary } from "../repositories/ipcSubclassDictionary";
 
+const MAX_PAGES = 20;
+const AXIOS_TIMEOUT = 10_000;
+
 export interface PatentItem {
   applicationNumber: string;
   applicantName: string;
@@ -65,10 +68,18 @@ async function fetchPage(
     pageNo: page,
   };
 
-  const res = await axios.get(url, { params });
+  const res = await axios.get(url, { params, timeout: AXIOS_TIMEOUT });
   const xml = res.data;
 
   const json = await xml2js.parseStringPromise(xml, { explicitArray: false });
+
+  // KIPRIS API 에러 응답 체크 (HTTP 200이지만 XML 내부에 에러코드)
+  const resultCode = json?.response?.header?.resultCode;
+  if (resultCode && resultCode !== "00") {
+    const resultMsg = json?.response?.header?.resultMsg ?? "알 수 없는 오류";
+    throw new Error(`KIPRIS API 오류: ${resultMsg}`);
+  }
+
   const body = json?.response?.body;
   const count = json?.response?.count;
 
@@ -89,7 +100,7 @@ async function fetchAll(
 
   const total = first.totalCount;
   const pageSize = 100;
-  const totalPages = Math.ceil(total / pageSize);
+  const totalPages = Math.min(Math.ceil(total / pageSize), MAX_PAGES);
 
   let items: PatentItem[] = [...first.items];
 
@@ -100,8 +111,14 @@ async function fetchAll(
     batchToProcess: ReturnType<typeof fetchPage>[]
   ) => {
     if (batchToProcess.length === 0) return;
-    const results = await Promise.all(batchToProcess);
-    items.push(...results.flatMap((r) => r.items));
+    const results = await Promise.allSettled(batchToProcess);
+    for (const result of results) {
+      if (result.status === "fulfilled") {
+        items.push(...result.value.items);
+      } else {
+        console.error("페이지 요청 실패:", result.reason?.message);
+      }
+    }
   };
 
   for (let page = 2; page <= totalPages; page++) {
