@@ -42,7 +42,7 @@ async function searchPatents(params: SearchParams) {
     }
   }
   const fullUrl = `${KIPRIS_ADVANCED_SEARCH_URL}?${query.toString()}`;
-  const res = await axios.get(fullUrl);
+  const res = await axios.get(fullUrl, { timeout: 10_000 });
   const json = await parseXml(res.data);
 
   const body = json?.response?.body;
