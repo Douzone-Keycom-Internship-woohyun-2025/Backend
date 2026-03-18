@@ -53,6 +53,12 @@ async function searchPatents(params: SearchParams) {
   }
   const json = await parseXml(res.data);
 
+  const resultCode = json?.response?.header?.resultCode;
+  if (resultCode && resultCode !== "00") {
+    const resultMsg = json?.response?.header?.resultMsg ?? "알 수 없는 오류";
+    throw new Error(`KIPRIS API 오류: ${resultMsg}`);
+  }
+
   const body = json?.response?.body;
   const count = json?.response?.count;
 
