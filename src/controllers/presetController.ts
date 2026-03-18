@@ -42,17 +42,17 @@ export const listPresets = async (
   try {
     const userId = req.user!.userId;
 
-    const rawSkip = Number(req.query.skip ?? 0);
+    const rawPage = Number(req.query.page ?? 1);
     const rawLimit = Number(req.query.limit ?? 10);
-    const skip =
-      Number.isFinite(rawSkip) && rawSkip > 0 ? Math.floor(rawSkip) : 0;
+    const page =
+      Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1;
     const limit =
       Number.isFinite(rawLimit) && rawLimit > 0
         ? Math.min(Math.floor(rawLimit), 100)
         : 10;
+    const skip = (page - 1) * limit;
 
     const { rows, total } = await PresetService.list(userId, skip, limit);
-    const page = Math.floor(skip / Math.max(1, limit)) + 1;
     const totalPages = Math.max(1, Math.ceil(total / Math.max(1, limit)));
 
     return res.json({
