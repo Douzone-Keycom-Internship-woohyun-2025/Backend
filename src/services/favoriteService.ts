@@ -13,16 +13,6 @@ export const FavoriteService = {
     try {
       await client.query("BEGIN");
 
-      // 필수값 체크
-      if (!payload.applicationNumber)
-        throw new BadRequestError("출원번호는 필수입니다.");
-      if (!payload.inventionTitle)
-        throw new BadRequestError("발명의 명칭은 필수입니다.");
-      if (!payload.applicantName)
-        throw new BadRequestError("출원인명은 필수입니다.");
-      if (!payload.applicationDate)
-        throw new BadRequestError("출원일은 필수입니다.");
-
       // 중복 체크
       const existing = await FavoriteRepository.findByApplicationNumber(
         userId,
