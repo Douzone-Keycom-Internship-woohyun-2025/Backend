@@ -42,7 +42,15 @@ async function searchPatents(params: SearchParams) {
     }
   }
   const fullUrl = `${KIPRIS_ADVANCED_SEARCH_URL}?${query.toString()}`;
-  const res = await axios.get(fullUrl, { timeout: 10_000 });
+  let res;
+  try {
+    res = await axios.get(fullUrl, { timeout: 10_000 });
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      err.config = undefined; // URL에 포함된 API 키 노출 방지
+    }
+    throw err;
+  }
   const json = await parseXml(res.data);
 
   const body = json?.response?.body;
