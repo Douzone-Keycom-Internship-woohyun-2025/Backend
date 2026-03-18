@@ -21,16 +21,16 @@ export interface FavoriteRow {
 export interface FavoritePayload {
   inventionTitle: string;
   applicantName: string;
-  abstract?: string;
+  abstract?: string | null;
   applicationDate: string;
   applicationNumber: string;
-  openNumber?: string;
-  publicationDate?: string;
-  publicationNumber?: string;
-  registerDate?: string;
+  openNumber?: string | null;
+  publicationDate?: string | null;
+  publicationNumber?: string | null;
+  registerDate?: string | null;
   registerNumber?: string | null;
-  registerStatus?: string;
-  drawingUrl?: string;
+  registerStatus?: string | null;
+  drawingUrl?: string | null;
   ipcNumber?: string | null;
   mainIpcCode?: string | null;
 }
