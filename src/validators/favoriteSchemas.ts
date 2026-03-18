@@ -27,7 +27,7 @@ export const createFavoriteSchema = z.object({
   registerNumber: z.string().nullable().optional(),
   registerDate: z.string().nullable().optional(),
   registerStatus: z.string().nullable().optional(),
-  drawingUrl: z.string().nullable().optional(),
+  drawingUrl: z.string().url("올바른 URL 형식이어야 합니다").max(2000, "URL은 2000자 이하").nullable().optional(),
   ipcNumber: z.string().nullable().optional(),
   mainIpcCode: z.string().nullable().optional(),
 });
