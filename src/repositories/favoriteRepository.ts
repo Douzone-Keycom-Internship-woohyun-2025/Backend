@@ -19,9 +19,10 @@ export const FavoriteRepository = {
         register_number,
         register_status,
         drawing_url,
-        main_ipc_code
+        main_ipc_code,
+        ipc_number
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
       RETURNING *
     `;
 
@@ -40,6 +41,7 @@ export const FavoriteRepository = {
       payload.registerStatus || null,
       payload.drawingUrl || null,
       payload.mainIpcCode || null,
+      payload.ipcNumber || null,
     ];
 
     const runner = client ?? pool;

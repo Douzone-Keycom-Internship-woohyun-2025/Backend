@@ -175,6 +175,7 @@ export const SummaryService = {
     /** --- 월별 추이 --- */
     const monthlyMap: Record<string, number> = {};
     for (const p of items) {
+      if (!p.applicationDate || p.applicationDate.length < 6) continue;
       const y = p.applicationDate.slice(0, 4);
       const m = p.applicationDate.slice(4, 6);
       const key = `${y}-${m}`;
@@ -207,6 +208,7 @@ export const SummaryService = {
 
     /** --- 최근 특허 3개 --- */
     const recentPatents = [...items]
+      .filter((p) => p.applicationDate && p.applicationDate.length >= 8)
       .sort((a, b) => Number(b.applicationDate) - Number(a.applicationDate))
       .slice(0, 3)
       .map((p) => {
