@@ -1,4 +1,5 @@
 import app from "./app";
+import { pool } from "./config/db";
 import { IpcSubclassDictionary } from "./repositories/ipcSubclassDictionary";
 
 const PORT = process.env.PORT || 4000;
@@ -12,7 +13,26 @@ const PORT = process.env.PORT || 4000;
     process.exit(1);
   }
 
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`TechLens backend running on port ${PORT}`);
   });
+
+  const shutdown = async (signal: string) => {
+    console.log(`[${signal}] Graceful shutdown 시작...`);
+
+    server.close(async () => {
+      console.log("HTTP 서버 종료 완료");
+      await pool.end();
+      console.log("DB 커넥션 풀 종료 완료");
+      process.exit(0);
+    });
+
+    setTimeout(() => {
+      console.error("Graceful shutdown 시간 초과, 강제 종료");
+      process.exit(1);
+    }, 10_000);
+  };
+
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
 })();
