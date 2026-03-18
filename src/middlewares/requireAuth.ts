@@ -17,7 +17,7 @@ export function getBearerToken(req: Request): string | null {
   return token;
 }
 
-export async function requireAuth(
+export function requireAuth(
   req: AuthRequest,
   res: Response,
   next: NextFunction
