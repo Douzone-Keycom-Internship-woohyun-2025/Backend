@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { ZodError } from "zod";
 import { NotFoundError } from "../errors/notFoundError";
 import { BadRequestError } from "../errors/badRequestError";
 import { UnauthorizedError } from "../errors/unauthorizedError";
@@ -10,6 +11,14 @@ export function errorHandler(
   next: NextFunction
 ) {
   console.error("Error:", err);
+
+  // ZodError 처리 (400)
+  if (err instanceof ZodError) {
+    return res.status(400).json({
+      status: "fail",
+      message: err.issues.map((i) => i.message).join(", "),
+    });
+  }
 
   // BadRequestError 처리 (400)
   if (err instanceof BadRequestError) {

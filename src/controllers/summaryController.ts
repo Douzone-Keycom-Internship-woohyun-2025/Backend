@@ -17,6 +17,8 @@ export const getSummary = async (
     let startDate: string;
     let endDate: string;
 
+    const dateRegex = /^\d{8}$/;
+
     /** 📌 Preset 모드 */
     if (presetId) {
       const preset = await PresetService.get(userId, presetId);
@@ -34,6 +36,20 @@ export const getSummary = async (
           status: "fail",
           message:
             "presetId 또는 applicant + startDate + endDate 를 모두 입력해야 합니다.",
+        });
+      }
+
+      if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+        return res.status(400).json({
+          status: "fail",
+          message: "날짜는 YYYYMMDD 형식이어야 합니다.",
+        });
+      }
+
+      if (startDate > endDate) {
+        return res.status(400).json({
+          status: "fail",
+          message: "startDate가 endDate보다 늦을 수 없습니다.",
         });
       }
     }
