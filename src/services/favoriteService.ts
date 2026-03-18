@@ -31,10 +31,10 @@ export const FavoriteService = {
       if (existing)
         throw new BadRequestError("이미 즐겨찾기에 추가된 특허입니다.");
 
-      // 즐겨찾기 등록
-      const favorite = await FavoriteRepository.create(userId, payload);
+      // 즐겨찾기 등록 (client 전달 → 트랜잭션 내에서 실행)
+      const favorite = await FavoriteRepository.create(userId, payload, client);
 
-      // IPC subclass 매핑 저장
+      // IPC subclass 매핑 저장 (client 전달 → 트랜잭션 내에서 실행)
       if (payload.ipcNumber?.trim()) {
         const rawCodes = payload.ipcNumber.split("|").map((v) => v.trim());
 
@@ -45,7 +45,8 @@ export const FavoriteService = {
         if (subclassList.length > 0) {
           await patentIpcSubclassRepository.addMappings(
             favorite.patent_tblkey,
-            subclassList
+            subclassList,
+            client
           );
         }
       }
