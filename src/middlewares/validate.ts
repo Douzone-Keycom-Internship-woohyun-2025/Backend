@@ -18,8 +18,7 @@ export function validate(schema: z.ZodSchema) {
 
       return res.status(400).json({
         status: "fail",
-        message: "유효성 오류",
-        issues,
+        message: issues.map((i) => i.message).join(", "),
       });
     } catch (e: unknown) {
       console.error("유효성 검사 에러:", e);
