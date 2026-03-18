@@ -23,6 +23,11 @@ const allowedOrigins = [
   process.env.FRONTEND_URL_STAGING,
 ].filter(Boolean) as string[];
 
+if (allowedOrigins.length === 0) {
+  console.error("[CORS] 허용된 origin이 없습니다. FRONTEND_URL_* 환경변수를 확인하세요.");
+  process.exit(1);
+}
+
 app.use(
   cors({
     origin: allowedOrigins,
