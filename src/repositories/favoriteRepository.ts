@@ -49,9 +49,11 @@ export const FavoriteRepository = {
 
   async findByApplicationNumber(
     userId: number,
-    applicationNumber: string
+    applicationNumber: string,
+    client?: PoolClient
   ): Promise<FavoriteRow | null> {
-    const result = await pool.query(
+    const runner = client ?? pool;
+    const result = await runner.query(
       `SELECT * FROM favorite_patents WHERE user_tblkey = $1 AND application_number = $2`,
       [userId, applicationNumber]
     );

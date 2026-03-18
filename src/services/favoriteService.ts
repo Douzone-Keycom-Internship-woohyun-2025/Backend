@@ -13,10 +13,11 @@ export const FavoriteService = {
     try {
       await client.query("BEGIN");
 
-      // 중복 체크
+      // 중복 체크 (트랜잭션 내에서 실행)
       const existing = await FavoriteRepository.findByApplicationNumber(
         userId,
-        payload.applicationNumber
+        payload.applicationNumber,
+        client
       );
       if (existing)
         throw new BadRequestError("이미 즐겨찾기에 추가된 특허입니다.");
