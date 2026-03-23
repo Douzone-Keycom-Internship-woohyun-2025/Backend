@@ -13,28 +13,19 @@ export const FavoriteService = {
     try {
       await client.query("BEGIN");
 
-      // 필수값 체크
-      if (!payload.applicationNumber)
-        throw new BadRequestError("출원번호는 필수입니다.");
-      if (!payload.inventionTitle)
-        throw new BadRequestError("발명의 명칭은 필수입니다.");
-      if (!payload.applicantName)
-        throw new BadRequestError("출원인명은 필수입니다.");
-      if (!payload.applicationDate)
-        throw new BadRequestError("출원일은 필수입니다.");
-
-      // 중복 체크
+      // 중복 체크 (트랜잭션 내에서 실행)
       const existing = await FavoriteRepository.findByApplicationNumber(
         userId,
-        payload.applicationNumber
+        payload.applicationNumber,
+        client
       );
       if (existing)
         throw new BadRequestError("이미 즐겨찾기에 추가된 특허입니다.");
 
-      // 즐겨찾기 등록
-      const favorite = await FavoriteRepository.create(userId, payload);
+      // 즐겨찾기 등록 (client 전달 → 트랜잭션 내에서 실행)
+      const favorite = await FavoriteRepository.create(userId, payload, client);
 
-      // IPC subclass 매핑 저장
+      // IPC subclass 매핑 저장 (client 전달 → 트랜잭션 내에서 실행)
       if (payload.ipcNumber?.trim()) {
         const rawCodes = payload.ipcNumber.split("|").map((v) => v.trim());
 
@@ -45,7 +36,8 @@ export const FavoriteService = {
         if (subclassList.length > 0) {
           await patentIpcSubclassRepository.addMappings(
             favorite.patent_tblkey,
-            subclassList
+            subclassList,
+            client
           );
         }
       }

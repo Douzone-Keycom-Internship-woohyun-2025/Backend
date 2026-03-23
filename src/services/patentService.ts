@@ -31,12 +31,33 @@ const statusMap: Record<string, string> = {
 function extractMainIpcCode(ipcNumber?: string): string | undefined {
   if (!ipcNumber) return undefined;
   const firstCode = ipcNumber.split("|")[0]?.trim();
-  return firstCode?.split(" ")[0];
+  return firstCode?.replace(/\s+/g, "").slice(0, 4);
 }
 
 async function searchPatents(params: SearchParams) {
-  const res = await axios.get(KIPRIS_ADVANCED_SEARCH_URL, { params });
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null) {
+      query.append(key, String(value));
+    }
+  }
+  const fullUrl = `${KIPRIS_ADVANCED_SEARCH_URL}?${query.toString()}`;
+  let res;
+  try {
+    res = await axios.get(fullUrl, { timeout: 10_000 });
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      err.config = undefined; // URL에 포함된 API 키 노출 방지
+    }
+    throw err;
+  }
   const json = await parseXml(res.data);
+
+  const resultCode = json?.response?.header?.resultCode;
+  if (resultCode && resultCode !== "00") {
+    const resultMsg = json?.response?.header?.resultMsg ?? "알 수 없는 오류";
+    throw new Error(`KIPRIS API 오류: ${resultMsg}`);
+  }
 
   const body = json?.response?.body;
   const count = json?.response?.count;

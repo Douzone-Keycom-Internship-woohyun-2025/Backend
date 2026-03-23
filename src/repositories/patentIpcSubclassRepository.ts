@@ -1,7 +1,8 @@
 import { pool } from "../config/db";
+import { PoolClient } from "pg";
 
 export const patentIpcSubclassRepository = {
-  async addMappings(patentId: number, ipcList: string[]) {
+  async addMappings(patentId: number, ipcList: string[], client?: PoolClient) {
     if (ipcList.length === 0) return;
 
     const valueRows = ipcList.map((_, idx) => `($1, $${idx + 2})`).join(", ");
@@ -14,9 +15,8 @@ export const patentIpcSubclassRepository = {
 
     const values = [patentId, ...ipcList];
 
-    console.log("IPC INSERT:", values);
-
-    await pool.query(query, values);
+    const runner = client ?? pool;
+    await runner.query(query, values);
   },
 
   async findByPatentId(patentId: number) {
