@@ -1,8 +1,9 @@
 import { pool } from "../config/db";
+import { PoolClient } from "pg";
 import { FavoritePayload, FavoriteRow } from "../types/favorite";
 
 export const FavoriteRepository = {
-  async create(userId: number, payload: FavoritePayload): Promise<FavoriteRow> {
+  async create(userId: number, payload: FavoritePayload, client?: PoolClient): Promise<FavoriteRow> {
     const query = `
       INSERT INTO favorite_patents (
         user_tblkey,
@@ -18,9 +19,10 @@ export const FavoriteRepository = {
         register_number,
         register_status,
         drawing_url,
-        main_ipc_code
+        main_ipc_code,
+        ipc_number
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
       RETURNING *
     `;
 
@@ -39,17 +41,21 @@ export const FavoriteRepository = {
       payload.registerStatus || null,
       payload.drawingUrl || null,
       payload.mainIpcCode || null,
+      payload.ipcNumber || null,
     ];
 
-    const result = await pool.query(query, values);
+    const runner = client ?? pool;
+    const result = await runner.query(query, values);
     return result.rows[0];
   },
 
   async findByApplicationNumber(
     userId: number,
-    applicationNumber: string
+    applicationNumber: string,
+    client?: PoolClient
   ): Promise<FavoriteRow | null> {
-    const result = await pool.query(
+    const runner = client ?? pool;
+    const result = await runner.query(
       `SELECT * FROM favorite_patents WHERE user_tblkey = $1 AND application_number = $2`,
       [userId, applicationNumber]
     );

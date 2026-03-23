@@ -1,7 +1,13 @@
 import { pool } from "../config/db";
+import crypto from "crypto";
+
+function hashToken(token: string): string {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
 
 export const RefreshTokenRepository = {
   async save(token: string, email: string, expiresAt: Date) {
+    const hash = hashToken(token);
     await pool.query(
       `
       INSERT INTO refresh_tokens (token, email, expires_at)
@@ -9,19 +15,25 @@ export const RefreshTokenRepository = {
       ON CONFLICT (token)
       DO UPDATE SET email = EXCLUDED.email, expires_at = EXCLUDED.expires_at
       `,
-      [token, email, expiresAt]
+      [hash, email, expiresAt]
     );
   },
 
   async find(token: string) {
+    const hash = hashToken(token);
     const r = await pool.query(
       `SELECT * FROM refresh_tokens WHERE token=$1 AND expires_at > NOW()`,
-      [token]
+      [hash]
     );
     return r.rows[0] || null;
   },
 
   async delete(token: string) {
-    await pool.query(`DELETE FROM refresh_tokens WHERE token=$1`, [token]);
+    const hash = hashToken(token);
+    await pool.query(`DELETE FROM refresh_tokens WHERE token=$1`, [hash]);
+  },
+
+  async deleteByEmail(email: string) {
+    await pool.query(`DELETE FROM refresh_tokens WHERE email=$1`, [email]);
   },
 };

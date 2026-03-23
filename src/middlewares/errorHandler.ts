@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { ZodError } from "zod";
 import { NotFoundError } from "../errors/notFoundError";
 import { BadRequestError } from "../errors/badRequestError";
 import { UnauthorizedError } from "../errors/unauthorizedError";
@@ -10,6 +11,14 @@ export function errorHandler(
   next: NextFunction
 ) {
   console.error("Error:", err);
+
+  // ZodError 처리 (400)
+  if (err instanceof ZodError) {
+    return res.status(400).json({
+      status: "fail",
+      message: err.issues.map((i) => i.message).join(", "),
+    });
+  }
 
   // BadRequestError 처리 (400)
   if (err instanceof BadRequestError) {
@@ -32,22 +41,6 @@ export function errorHandler(
     return res.status(404).json({
       status: "fail",
       message: err.message,
-    });
-  }
-
-  // JWT 토큰 만료 에러 처리 (401)
-  if (err.name === "TokenExpiredError") {
-    return res.status(401).json({
-      status: "fail",
-      message: "토큰 만료됨",
-    });
-  }
-
-  // JWT 유효하지 않은 토큰 에러 처리 (401)
-  if (err.name === "JsonWebTokenError") {
-    return res.status(401).json({
-      status: "fail",
-      message: "유효하지 않은 토큰",
     });
   }
 
