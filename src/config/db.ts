@@ -7,4 +7,10 @@ export const pool = new Pool({
     process.env.NODE_ENV === "production"
       ? { rejectUnauthorized: true }
       : { rejectUnauthorized: false },
+  idleTimeoutMillis: 30_000,
+  connectionTimeoutMillis: 5_000,
+});
+
+pool.on("error", (err) => {
+  console.error("Unexpected idle client error:", err.message);
 });
