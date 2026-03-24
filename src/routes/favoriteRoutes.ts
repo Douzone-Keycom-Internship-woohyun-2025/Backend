@@ -9,7 +9,7 @@ import {
 } from "../controllers/favoriteController";
 import { requireAuth } from "../middlewares/requireAuth";
 import { validate } from "../middlewares/validate";
-import { createFavoriteSchema } from "../validators/favoriteSchemas";
+import { createFavoriteSchema, updateFavoriteSchema } from "../validators/favoriteSchemas";
 
 const router = Router();
 
@@ -18,7 +18,7 @@ router.post("/", validate(createFavoriteSchema), createFavorite);
 router.get("/", listFavorites);
 router.get("/analysis", analyzeFavorites);
 router.get("/:applicationNumber", getFavorite);
-router.patch("/:applicationNumber", updateFavorite);
+router.patch("/:applicationNumber", validate(updateFavoriteSchema), updateFavorite);
 router.delete("/:applicationNumber", deleteFavorite);
 
 export default router;

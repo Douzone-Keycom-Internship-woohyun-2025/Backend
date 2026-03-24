@@ -53,7 +53,17 @@ export const compareSummary = async (
       endDate,
     });
 
-    const comparisonData = results.map(({ applicant, result }) => ({
+    const { succeeded, failed } = results;
+
+    if (succeeded.length === 0) {
+      return res.status(502).json({
+        status: "fail",
+        message: "모든 회사의 분석에 실패했습니다.",
+        data: { failed },
+      });
+    }
+
+    const comparisonData = succeeded.map(({ applicant, result }) => ({
       applicant,
       period: { startDate, endDate },
       statistics: {
@@ -75,10 +85,13 @@ export const compareSummary = async (
 
     return res.json({
       status: "success",
-      message: "비교 분석 완료",
+      message: failed.length > 0
+        ? `비교 분석 완료 (${failed.length}개 회사 실패)`
+        : "비교 분석 완료",
       data: {
         period: { startDate, endDate },
         companies: comparisonData,
+        ...(failed.length > 0 && { failed }),
       },
     });
   } catch (err) {
