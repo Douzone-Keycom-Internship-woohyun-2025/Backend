@@ -1,10 +1,10 @@
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { Request, Response } from "express";
 import { AuthRequest } from "../types/auth";
 
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 30,
   message: {
     status: "fail",
     message: "요청이 너무 많습니다. 잠시 후 다시 시도하세요.",
@@ -26,7 +26,7 @@ export const apiLimiter = rateLimit({
 
 // KIPRIS API 호출 엔드포인트용 — 유저 단위 일일 한도
 // requireAuth 이후에 적용해야 req.user 접근 가능
-const DEMO_EMAIL = "demo@techlens.kr";
+const DEMO_EMAIL = "demo3@techlens.kr";
 const DEMO_DAILY_LIMIT = 30;
 const USER_DAILY_LIMIT = 200;
 
@@ -38,7 +38,7 @@ export const kiprisLimiter = rateLimit({
   },
   keyGenerator: (req: Request) => {
     const { user } = req as AuthRequest;
-    return user ? `kipris:user:${user.userId}` : `kipris:ip:${req.ip}`;
+    return user ? `kipris:user:${user.userId}` : `kipris:ip:${ipKeyGenerator(req.ip ?? "")}`;
   },
   handler: (req: Request, res: Response) => {
     const { user } = req as AuthRequest;
