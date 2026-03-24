@@ -69,4 +69,22 @@ export const FavoriteService = {
     const deleted = await FavoriteRepository.delete(userId, applicationNumber);
     if (!deleted) throw new NotFoundError("즐겨찾기를 찾을 수 없습니다.");
   },
+
+  async updateMemo(
+    userId: number,
+    applicationNumber: string,
+    memo: string | null
+  ) {
+    const updated = await FavoriteRepository.updateMemo(
+      userId,
+      applicationNumber,
+      memo
+    );
+    if (!updated) throw new NotFoundError("즐겨찾기를 찾을 수 없습니다.");
+    return updated;
+  },
+
+  async analyze(userId: number) {
+    return FavoriteRepository.getAnalysis(userId);
+  },
 };
