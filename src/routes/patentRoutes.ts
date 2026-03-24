@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { requireAuth } from "../middlewares/requireAuth";
 import { validate } from "../middlewares/validate";
+import { kiprisLimiter } from "../middlewares/rateLimiter";
 import {
   basicSearchSchema,
   advancedSearchSchema,
@@ -13,8 +14,8 @@ import {
 
 const router = Router();
 
-router.post("/search/basic", requireAuth, validate(basicSearchSchema), basicSearch);
-router.post("/search/advanced", requireAuth, validate(advancedSearchSchema), advancedSearch);
-router.get("/:applicationNumber", requireAuth, getPatentDetail);
+router.post("/search/basic", requireAuth, kiprisLimiter, validate(basicSearchSchema), basicSearch);
+router.post("/search/advanced", requireAuth, kiprisLimiter, validate(advancedSearchSchema), advancedSearch);
+router.get("/:applicationNumber", requireAuth, kiprisLimiter, getPatentDetail);
 
 export default router;
