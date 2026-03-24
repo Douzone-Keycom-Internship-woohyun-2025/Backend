@@ -26,7 +26,7 @@ export const apiLimiter = rateLimit({
 
 // KIPRIS API 호출 엔드포인트용 — 유저 단위 일일 한도
 // requireAuth 이후에 적용해야 req.user 접근 가능
-const DEMO_EMAIL = "demo@techlens.kr";
+const DEMO_EMAIL = "demo2@techlens.kr";
 const DEMO_DAILY_LIMIT = 30;
 const USER_DAILY_LIMIT = 200;
 
