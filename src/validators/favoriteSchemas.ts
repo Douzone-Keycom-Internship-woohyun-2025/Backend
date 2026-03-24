@@ -31,3 +31,7 @@ export const createFavoriteSchema = z.object({
   ipcNumber: z.string().nullable().optional(),
   mainIpcCode: z.string().nullable().optional(),
 });
+
+export const updateFavoriteSchema = z.object({
+  memo: z.string().max(5000, "메모는 5000자 이하여야 합니다").nullable(),
+});

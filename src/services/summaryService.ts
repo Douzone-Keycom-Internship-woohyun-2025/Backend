@@ -147,6 +147,37 @@ async function fetchAll(
 }
 
 export const SummaryService = {
+  async compareAnalyze({
+    applicants,
+    startDate,
+    endDate,
+  }: {
+    applicants: string[];
+    startDate: string;
+    endDate: string;
+  }): Promise<{
+    succeeded: Array<{ applicant: string; result: PatentStatResult }>;
+    failed: Array<{ applicant: string; reason: string }>;
+  }> {
+    const succeeded: Array<{ applicant: string; result: PatentStatResult }> = [];
+    const failed: Array<{ applicant: string; reason: string }> = [];
+
+    // 순차 실행 — KIPRIS 동시 요청 폭주 방지
+    for (const applicant of applicants) {
+      try {
+        const result = await SummaryService.analyze({ applicant, startDate, endDate });
+        succeeded.push({ applicant, result });
+      } catch (err) {
+        failed.push({
+          applicant,
+          reason: err instanceof Error ? err.message : "알 수 없는 오류",
+        });
+      }
+    }
+
+    return { succeeded, failed };
+  },
+
   async analyze({
     applicant,
     startDate,
