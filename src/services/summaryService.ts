@@ -147,6 +147,29 @@ async function fetchAll(
 }
 
 export const SummaryService = {
+  async compareAnalyze({
+    applicants,
+    startDate,
+    endDate,
+  }: {
+    applicants: string[];
+    startDate: string;
+    endDate: string;
+  }) {
+    const results = await Promise.allSettled(
+      applicants.map(async (applicant) => ({
+        applicant,
+        result: await SummaryService.analyze({ applicant, startDate, endDate }),
+      }))
+    );
+    return results
+      .filter(
+        (r): r is PromiseFulfilledResult<{ applicant: string; result: PatentStatResult }> =>
+          r.status === "fulfilled"
+      )
+      .map((r) => r.value);
+  },
+
   async analyze({
     applicant,
     startDate,

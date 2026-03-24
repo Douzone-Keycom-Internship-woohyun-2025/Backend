@@ -68,6 +68,7 @@ export const listFavorites = async (
           registerStatus: f.register_status,
           drawingUrl: f.drawing_url,
           mainIpcCode: f.main_ipc_code,
+          memo: f.memo,
           createdAt: f.adddate,
         })),
       },
@@ -105,6 +106,7 @@ export const getFavorite = async (
         registerStatus: favorite.register_status,
         drawingUrl: favorite.drawing_url,
         mainIpcCode: favorite.main_ipc_code,
+        memo: favorite.memo,
         createdAt: favorite.adddate,
       },
     });
@@ -125,6 +127,55 @@ export const deleteFavorite = async (
     await FavoriteService.remove(userId, applicationNumber);
 
     return res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateFavorite = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = req.user!.userId;
+    const applicationNumber = req.params.applicationNumber;
+    const { memo } = req.body;
+
+    const favorite = await FavoriteService.updateMemo(
+      userId,
+      applicationNumber,
+      memo !== undefined ? memo : null
+    );
+
+    return res.json({
+      status: "success",
+      message: "메모가 업데이트되었습니다.",
+      data: {
+        id: favorite.patent_tblkey,
+        applicationNumber: favorite.application_number,
+        memo: favorite.memo,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const analyzeFavorites = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = req.user!.userId;
+    const analysis = await FavoriteService.analyze(userId);
+
+    return res.json({
+      status: "success",
+      message: "즐겨찾기 분석 완료",
+      data: analysis,
+    });
   } catch (err) {
     next(err);
   }
