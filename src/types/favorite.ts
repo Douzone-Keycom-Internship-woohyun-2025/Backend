@@ -16,6 +16,7 @@ export interface FavoriteRow {
   open_number: string | null;
   ipc_number: string | null;
   main_ipc_code: string | null;
+  memo: string | null;
 }
 
 export interface FavoritePayload {

@@ -3,6 +3,102 @@ import { AuthRequest } from "../types/auth";
 import { PresetService } from "../services/presetService";
 import { SummaryService } from "../services/summaryService";
 
+export const compareSummary = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const applicantsRaw = String(req.query.applicants || "").trim();
+    const startDate = String(req.query.startDate || "").trim();
+    const endDate = String(req.query.endDate || "").trim();
+
+    if (!applicantsRaw || !startDate || !endDate) {
+      return res.status(400).json({
+        status: "fail",
+        message: "applicants, startDate, endDate 를 모두 입력해야 합니다.",
+      });
+    }
+
+    const dateRegex = /^\d{8}$/;
+    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+      return res.status(400).json({
+        status: "fail",
+        message: "날짜는 YYYYMMDD 형식이어야 합니다.",
+      });
+    }
+
+    if (startDate > endDate) {
+      return res.status(400).json({
+        status: "fail",
+        message: "startDate가 endDate보다 늦을 수 없습니다.",
+      });
+    }
+
+    const applicants = applicantsRaw
+      .split(",")
+      .map((a) => a.trim())
+      .filter(Boolean);
+
+    if (applicants.length < 2 || applicants.length > 5) {
+      return res.status(400).json({
+        status: "fail",
+        message: "비교 대상 회사는 2~5개여야 합니다.",
+      });
+    }
+
+    const results = await SummaryService.compareAnalyze({
+      applicants,
+      startDate,
+      endDate,
+    });
+
+    const { succeeded, failed } = results;
+
+    if (succeeded.length === 0) {
+      return res.status(502).json({
+        status: "fail",
+        message: "모든 회사의 분석에 실패했습니다.",
+        data: { failed },
+      });
+    }
+
+    const comparisonData = succeeded.map(({ applicant, result }) => ({
+      applicant,
+      period: { startDate, endDate },
+      statistics: {
+        totalPatents: result.totalCount,
+        monthlyAverage: result.avgMonthlyCount,
+        registrationRate: result.statusPercent["등록"] ?? 0,
+      },
+      ipcDistribution: result.topIPC.map((x) => ({
+        ipcCode: x.code,
+        ipcKorName: x.korName,
+        count: x.count,
+      })),
+      statusDistribution: Object.entries(result.statusCount).map(
+        ([status, count]) => ({ status, count })
+      ),
+      monthlyTrend: result.monthlyTrend,
+      recentPatents: result.recentPatents,
+    }));
+
+    return res.json({
+      status: "success",
+      message: failed.length > 0
+        ? `비교 분석 완료 (${failed.length}개 회사 실패)`
+        : "비교 분석 완료",
+      data: {
+        period: { startDate, endDate },
+        companies: comparisonData,
+        ...(failed.length > 0 && { failed }),
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getSummary = async (
   req: AuthRequest,
   res: Response,
