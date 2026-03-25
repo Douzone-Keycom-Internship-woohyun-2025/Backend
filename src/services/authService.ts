@@ -75,8 +75,18 @@ export const AuthService = {
     const refreshToken = generateRefreshToken();
     const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY);
 
-    await RefreshTokenRepository.deleteByEmail(email);
-    await RefreshTokenRepository.save(refreshToken, email, expiresAt);
+    try {
+      await RefreshTokenRepository.deleteByEmail(email);
+    } catch (dbErr) {
+      console.error("[login] deleteByEmail 실패:", dbErr);
+      throw dbErr;
+    }
+    try {
+      await RefreshTokenRepository.save(refreshToken, email, expiresAt);
+    } catch (dbErr) {
+      console.error("[login] save 실패:", dbErr);
+      throw dbErr;
+    }
 
     const { password_hash: _, ...safeUser } = user;
     return { user: safeUser, accessToken, refreshToken };
