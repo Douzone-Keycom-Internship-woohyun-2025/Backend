@@ -38,7 +38,8 @@ describe("AuthService.signup", () => {
   it("이미 가입된 이메일이면 BadRequestError를 던진다", async () => {
     (UserRepository.findByEmail as jest.Mock).mockResolvedValue(mockUser);
 
-    await expect(AuthService.signup("test@example.com", "password123")).rejects.toThrow(new BadRequestError("이미 가입된 이메일입니다."));
+    await expect(AuthService.signup("test@example.com", "password123")).rejects.toThrow(BadRequestError);
+    await expect(AuthService.signup("test@example.com", "password123")).rejects.toThrow("이미 가입된 이메일");
   });
 
   it("비밀번호가 8자 미만이면 BadRequestError를 던진다", async () => {
