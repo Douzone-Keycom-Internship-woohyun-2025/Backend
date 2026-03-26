@@ -9,8 +9,7 @@ const PORT = process.env.PORT || 4000;
     await IpcSubclassDictionary.loadCache();
     console.log("IPC 캐시 초기화 완료");
   } catch (error) {
-    console.error("IPC 캐시 초기화 실패:", error);
-    process.exit(1);
+    console.error("IPC 캐시 초기화 실패 (서버는 계속 실행):", error);
   }
 
   const server = app.listen(PORT, () => {
