@@ -5,7 +5,7 @@ import { KIPRIS_KEY } from "../config/env";
 import { KIPRIS_BASE } from "../config/env";
 import { IpcSubclassDictionary } from "../repositories/ipcSubclassDictionary";
 
-const MAX_PAGES = 20;
+const MAX_PAGES = 7;
 const AXIOS_TIMEOUT = 10_000;
 
 export interface PatentItem {
@@ -104,10 +104,10 @@ async function fetchAll(
   start: string,
   end: string
 ): Promise<PatentItem[]> {
-  const first = await fetchPage(applicant, start, end, 1, 100);
+  const first = await fetchPage(applicant, start, end, 1, 300);
 
   const total = first.totalCount;
-  const pageSize = 100;
+  const pageSize = 300;
   const totalPages = Math.min(Math.ceil(total / pageSize), MAX_PAGES);
 
   let items: PatentItem[] = [...first.items];
@@ -130,7 +130,7 @@ async function fetchAll(
   };
 
   for (let page = 2; page <= totalPages; page++) {
-    batch.push(fetchPage(applicant, start, end, page, 100));
+    batch.push(fetchPage(applicant, start, end, page, 300));
 
     if (batch.length >= concurrency) {
       await processBatch(batch);
