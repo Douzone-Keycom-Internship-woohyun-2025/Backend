@@ -2,6 +2,7 @@
 
 - 수정일자: 2026-07-31
 - 작성자: 심우현
+- 멘토: 박효민 선임연구원, 양태인 주임연구원
 - 프로젝트: 기업의 특허 검색과 기술 동향 분석을 지원하는 백엔드 API
 - 프론트엔드: [TechLens Frontend](https://github.com/Douzone-Keycom-Internship-woohyun-2025/Frontend)
 - 공통 문서: [TechLens 기술 문서](https://github.com/Douzone-Keycom-Internship-woohyun-2025/Docs)
